@@ -15,12 +15,16 @@ from flask import (
     g, flash, jsonify, send_file
 )
 from werkzeug.security import generate_password_hash, check_password_hash
+from werkzeug.utils import secure_filename
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 DB_PATH = os.path.join(BASE_DIR, "hikma.db")
 
 app = Flask(__name__)
 app.secret_key = os.environ.get("HIKMA_SECRET_KEY", "hikma-impact-dev-secret-change-me")
+app.config["MAX_CONTENT_LENGTH"] = 5 * 1024 * 1024
+UPLOAD_DIR = os.path.join(BASE_DIR, "static", "uploads")
+os.makedirs(UPLOAD_DIR, exist_ok=True)
 
 CRITERIA_KEYS = ["attendance", "taskCompletion", "initiativeParticipation",
                   "commitment", "teamwork", "creativity"]
@@ -59,7 +63,13 @@ def init_db():
         role TEXT, created_at TEXT);
     CREATE TABLE IF NOT EXISTS members(
         id TEXT PRIMARY KEY, name TEXT, email TEXT, phone TEXT, committee TEXT,
-        position TEXT, join_date TEXT, status TEXT, notes TEXT, created_at TEXT);
+        position TEXT, join_date TEXT, status TEXT, notes TEXT, created_at TEXT, photo TEXT);
+    CREATE TABLE IF NOT EXISTS news(
+        id TEXT PRIMARY KEY, title TEXT, slug TEXT UNIQUE, excerpt TEXT, content TEXT,
+        cover_image TEXT, category TEXT, author TEXT, status TEXT, published_at TEXT, created_at TEXT);
+    CREATE TABLE IF NOT EXISTS pages(
+        id TEXT PRIMARY KEY, title TEXT, slug TEXT UNIQUE, content TEXT, status TEXT,
+        show_in_nav INTEGER DEFAULT 0, sort_order INTEGER DEFAULT 0, created_at TEXT, updated_at TEXT);
     CREATE TABLE IF NOT EXISTS administrators(
         id TEXT PRIMARY KEY, name TEXT, position TEXT, committee TEXT,
         date TEXT, responsibilities TEXT);
@@ -94,7 +104,22 @@ def init_db():
                    ("فريق الحكمة الطلابي — نظام إدارة الأداء والأثر التطوعي",))
         db.execute("INSERT INTO settings(key,value) VALUES('weights',?)", (json.dumps(DEFAULT_WEIGHTS),))
         db.execute("INSERT INTO settings(key,value) VALUES('points',?)", (json.dumps(DEFAULT_POINTS),))
-        db.commit()
+        # Lightweight migrations for existing deployments.
+    def ensure_column(table, column, definition):
+        cols = {r["name"] for r in db.execute(f"PRAGMA table_info({table})").fetchall()}
+        if column not in cols:
+            db.execute(f"ALTER TABLE {table} ADD COLUMN {column} {definition}")
+    ensure_column("members", "photo", "TEXT")
+    # Backfill newer appearance/public settings without destroying existing configuration.
+    defaults = {
+        "accentColor": "#20B486", "navyColor": "#071A2F", "backgroundColor": "#F5F7FA",
+        "fontFamily": "Tajawal", "heroTitle": "أثرٌ يُقاس، وقيادةٌ تُصنع",
+        "heroText": "منصة HIKMA IMPACT لإدارة الأثر، المبادرات، والأداء التطوعي.",
+        "announcement": "", "customCss": "", "siteMode": "public",
+    }
+    for k,v in defaults.items():
+        db.execute("INSERT OR IGNORE INTO settings(key,value) VALUES(?,?)", (k,v))
+    db.commit()
     db.close()
 
 
@@ -134,25 +159,51 @@ def current_user():
         return None
     return get_db().execute("SELECT * FROM users WHERE id=?", (uid_,)).fetchone()
 
+def is_admin():
+    u = current_user()
+    return bool(u and u["role"] in ("CREATOR", "SUPER_ADMIN", "ADMIN"))
+
+def is_creator():
+    u = current_user()
+    return bool(u and u["role"] in ("CREATOR", "SUPER_ADMIN"))
+
+ADMIN_GET_ENDPOINTS = {
+    "settings_page", "audit_log", "backup_export",
+    "admin_new", "admin_edit", "admin_delete", "admin_users", "admin_user_role",
+    "admin_login", "admin_dashboard", "news_admin", "news_new", "news_edit",
+    "news_delete", "page_admin", "page_new", "page_edit", "page_delete",
+}
+PUBLIC_ENDPOINTS = {"public_home", "public_news", "public_news_detail", "public_page",
+                    "login", "admin_login", "logout", "static", "signup"}
 
 @app.before_request
-def require_login():
-    open_endpoints = {"login", "signup", "static"}
-    if request.endpoint in open_endpoints:
+def access_control():
+    endpoint = request.endpoint or ""
+    # Public GET pages are view-only. Any write request requires an admin.
+    if endpoint in PUBLIC_ENDPOINTS:
         return
-    if not session.get("user_id"):
-        return redirect(url_for("login"))
-
+    if request.method in ("POST", "PUT", "PATCH", "DELETE"):
+        if not is_admin():
+            if request.is_json:
+                return jsonify({"ok": False, "error": "Admin access required"}), 403
+            flash("هذه العملية متاحة للإدارة فقط", "error")
+            return redirect(url_for("admin_login"))
+    if endpoint in ADMIN_GET_ENDPOINTS or any(x in endpoint for x in ("_new", "_edit", "_delete", "backup_")):
+        if not is_admin():
+            flash("هذه الصفحة متاحة للإدارة فقط", "error")
+            return redirect(url_for("admin_login"))
 
 @app.context_processor
 def inject_globals():
     return {
         "session_user": current_user(),
-        "team_name": get_setting("teamName", "HIKMA IMPACT") if session.get("user_id") else "HIKMA IMPACT",
-        "subtitle": get_setting("subtitle", "") if session.get("user_id") else "",
+        "is_admin": is_admin(),
+        "is_creator": is_creator(),
+        "team_name": get_setting("teamName", "HIKMA IMPACT"),
+        "subtitle": get_setting("subtitle", "فريق الحكمة الطلابي"),
+        "site_settings": {k: get_setting(k, "") for k in ["accentColor","navyColor","backgroundColor","fontFamily","heroTitle","heroText","announcement","customCss"]},
         "current_endpoint": request.endpoint,
     }
-
 
 def log_action(action, target):
     db = get_db()
@@ -161,61 +212,39 @@ def log_action(action, target):
                (uid("log"), action, target, u["name"] if u else "—", now_iso()))
     db.commit()
 
-
 def add_points(member_id, value, source):
     db = get_db()
     db.execute("INSERT INTO points(id,member_id,value,source,date) VALUES(?,?,?,?,?)",
                (uid("pt"), member_id, value, source, now_iso()))
     db.commit()
 
-
 @app.route("/login", methods=["GET", "POST"])
 def login():
+    return redirect(url_for("admin_login"))
+
+@app.route("/admin/login", methods=["GET", "POST"])
+def admin_login():
     if request.method == "POST":
         email = request.form.get("email", "").strip().lower()
         password = request.form.get("password", "")
-        db = get_db()
-        user = db.execute("SELECT * FROM users WHERE lower(email)=?", (email,)).fetchone()
-        if not user or not check_password_hash(user["password_hash"], password):
-            flash("بيانات الدخول غير صحيحة", "error")
-            return redirect(url_for("login"))
+        user = get_db().execute("SELECT * FROM users WHERE lower(email)=?", (email,)).fetchone()
+        if not user or user["role"] not in ("CREATOR", "SUPER_ADMIN", "ADMIN") or not check_password_hash(user["password_hash"], password):
+            flash("بيانات الإدارة غير صحيحة", "error")
+            return redirect(url_for("admin_login"))
         session["user_id"] = user["id"]
-        return redirect(url_for("dashboard"))
-    has_users = get_db().execute("SELECT COUNT(*) c FROM users").fetchone()["c"] > 0
-    return render_template("login.html", has_users=has_users)
-
+        return redirect(url_for("admin_dashboard"))
+    has_admin = get_db().execute("SELECT COUNT(*) c FROM users WHERE role IN ('CREATOR','SUPER_ADMIN','ADMIN')").fetchone()["c"] > 0
+    return render_template("admin_login.html", has_admin=has_admin)
 
 @app.route("/signup", methods=["GET", "POST"])
 def signup():
-    db = get_db()
-    has_users = db.execute("SELECT COUNT(*) c FROM users").fetchone()["c"] > 0
-    if request.method == "POST":
-        name = request.form.get("name", "").strip()
-        email = request.form.get("email", "").strip().lower()
-        password = request.form.get("password", "")
-        if not name or not email or not password:
-            flash("يرجى تعبئة جميع الحقول", "error")
-            return redirect(url_for("signup"))
-        existing = db.execute("SELECT id FROM users WHERE lower(email)=?", (email,)).fetchone()
-        if existing:
-            flash("البريد الإلكتروني مستخدم بالفعل", "error")
-            return redirect(url_for("signup"))
-        role = "SUPER_ADMIN" if not has_users else "MEMBER"
-        new_id = uid("usr")
-        db.execute("INSERT INTO users(id,name,email,password_hash,role,created_at) VALUES(?,?,?,?,?,?)",
-                   (new_id, name, email, generate_password_hash(password), role, now_iso()))
-        db.commit()
-        session["user_id"] = new_id
-        log_action("Created", f"حساب: {name}")
-        return redirect(url_for("dashboard"))
-    return render_template("signup.html", has_users=has_users)
-
+    # Public account creation is intentionally disabled in v2.
+    return redirect(url_for("admin_login"))
 
 @app.route("/logout")
 def logout():
     session.clear()
-    return redirect(url_for("login"))
-
+    return redirect(url_for("public_home"))
 
 # ============================================================ COMPUTATION ENGINE ============================================================
 def member_score(db, member_id):
@@ -295,9 +324,118 @@ def fmt_date(d):
 app.jinja_env.filters["fmt_date"] = fmt_date
 
 
+# ============================================================ ADMIN CENTER / NEWS / PAGES ============================================================
+@app.route("/admin")
+def admin_dashboard():
+    db=get_db()
+    stats={
+        "members": db.execute("SELECT COUNT(*) c FROM members").fetchone()["c"],
+        "news": db.execute("SELECT COUNT(*) c FROM news WHERE status='published'").fetchone()["c"],
+        "initiatives": db.execute("SELECT COUNT(*) c FROM initiatives").fetchone()["c"],
+        "evaluations": db.execute("SELECT COUNT(*) c FROM evaluations").fetchone()["c"],
+    }
+    recent=db.execute("SELECT * FROM audit_logs ORDER BY date DESC LIMIT 8").fetchall()
+    return render_template("admin_dashboard.html", stats=stats, recent=recent)
+
+@app.route("/admin/users")
+def admin_users():
+    users=get_db().execute("SELECT id,name,email,role,created_at FROM users ORDER BY created_at DESC").fetchall()
+    return render_template("admin_users.html", users=users)
+
+@app.route("/admin/users/<uid_>/role", methods=["POST"])
+def admin_user_role(uid_):
+    if not is_creator():
+        flash("تغيير صلاحيات الأدمن متاح لصانع التطبيق فقط", "error")
+        return redirect(url_for("admin_users"))
+    role=request.form.get("role","ADMIN")
+    if role not in ("ADMIN","CREATOR"): role="ADMIN"
+    db=get_db(); db.execute("UPDATE users SET role=? WHERE id=?", (role,uid_)); db.commit()
+    log_action("Role changed", uid_)
+    flash("تم تحديث الصلاحية", "ok")
+    return redirect(url_for("admin_users"))
+
+@app.route("/news")
+def public_news():
+    rows=get_db().execute("SELECT * FROM news WHERE status='published' ORDER BY published_at DESC, created_at DESC").fetchall()
+    return render_template("news.html", news=rows)
+
+@app.route("/news/<slug>")
+def public_news_detail(slug):
+    n=get_db().execute("SELECT * FROM news WHERE slug=? AND status='published'", (slug,)).fetchone()
+    if not n: return redirect(url_for("public_news"))
+    return render_template("news_detail.html", n=n)
+
+@app.route("/admin/news")
+def news_admin():
+    rows=get_db().execute("SELECT * FROM news ORDER BY created_at DESC").fetchall()
+    return render_template("news_admin.html", news=rows)
+
+@app.route("/admin/news/new", methods=["GET","POST"])
+def news_new():
+    if request.method=="POST":
+        db=get_db(); title=request.form.get("title","").strip(); slug=request.form.get("slug","").strip().lower().replace(" ","-")
+        if not title: flash("اكتب عنوان الخبر", "error"); return redirect(request.url)
+        if not slug: slug=uuid.uuid4().hex[:10]
+        author=(current_user()["name"] if current_user() else "HIKMA IMPACT")
+        status=request.form.get("status","draft")
+        db.execute("INSERT INTO news(id,title,slug,excerpt,content,cover_image,category,author,status,published_at,created_at) VALUES(?,?,?,?,?,?,?,?,?,?,?)",
+                   (uid("news"),title,slug,request.form.get("excerpt",""),request.form.get("content",""),request.form.get("cover_image",""),request.form.get("category","عام"),author,status,now_iso() if status=="published" else None,now_iso()))
+        db.commit(); log_action("Created news",title); flash("تم حفظ الخبر", "ok"); return redirect(url_for("news_admin"))
+    return render_template("news_form.html", n=None)
+
+@app.route("/admin/news/<nid>/edit", methods=["GET","POST"])
+def news_edit(nid):
+    db=get_db(); n=db.execute("SELECT * FROM news WHERE id=?",(nid,)).fetchone()
+    if not n: return redirect(url_for("news_admin"))
+    if request.method=="POST":
+        status=request.form.get("status","draft")
+        db.execute("UPDATE news SET title=?,slug=?,excerpt=?,content=?,cover_image=?,category=?,status=?,published_at=? WHERE id=?",
+                   (request.form.get("title",""),request.form.get("slug",""),request.form.get("excerpt",""),request.form.get("content",""),request.form.get("cover_image",""),request.form.get("category","عام"),status,now_iso() if status=="published" else None,nid))
+        db.commit(); log_action("Updated news",n["title"]); flash("تم تحديث الخبر", "ok"); return redirect(url_for("news_admin"))
+    return render_template("news_form.html", n=n)
+
+@app.route("/admin/news/<nid>/delete", methods=["POST"])
+def news_delete(nid):
+    db=get_db(); db.execute("DELETE FROM news WHERE id=?",(nid,)); db.commit(); log_action("Deleted news",nid); return redirect(url_for("news_admin"))
+
+@app.route("/page/<slug>")
+def public_page(slug):
+    p=get_db().execute("SELECT * FROM pages WHERE slug=? AND status='published'",(slug,)).fetchone()
+    if not p: return "<h2 style='font-family:Tajawal'>الصفحة غير موجودة</h2>",404
+    return render_template("page_public.html", page=p)
+
+@app.route("/admin/pages")
+def page_admin():
+    pages=get_db().execute("SELECT * FROM pages ORDER BY sort_order,title").fetchall()
+    return render_template("pages_admin.html", pages=pages)
+
+@app.route("/admin/pages/new", methods=["GET","POST"])
+def page_new():
+    if request.method=="POST":
+        db=get_db(); title=request.form.get("title","").strip(); slug=request.form.get("slug","").strip().lower().replace(" ","-") or uuid.uuid4().hex[:10]
+        db.execute("INSERT INTO pages(id,title,slug,content,status,show_in_nav,sort_order,created_at,updated_at) VALUES(?,?,?,?,?,?,?,?,?)",
+                   (uid("page"),title,slug,request.form.get("content",""),request.form.get("status","draft"),1 if request.form.get("show_in_nav") else 0,int(request.form.get("sort_order",0) or 0),now_iso(),now_iso()))
+        db.commit(); log_action("Created page",title); return redirect(url_for("page_admin"))
+    return render_template("page_form.html", page=None)
+
+@app.route("/admin/pages/<pid>/edit", methods=["GET","POST"])
+def page_edit(pid):
+    db=get_db(); p=db.execute("SELECT * FROM pages WHERE id=?",(pid,)).fetchone()
+    if not p: return redirect(url_for("page_admin"))
+    if request.method=="POST":
+        db.execute("UPDATE pages SET title=?,slug=?,content=?,status=?,show_in_nav=?,sort_order=?,updated_at=? WHERE id=?",
+                   (request.form.get("title",""),request.form.get("slug",""),request.form.get("content",""),request.form.get("status","draft"),1 if request.form.get("show_in_nav") else 0,int(request.form.get("sort_order",0) or 0),now_iso(),pid))
+        db.commit(); log_action("Updated page",p["title"]); return redirect(url_for("page_admin"))
+    return render_template("page_form.html", page=p)
+
+@app.route("/admin/pages/<pid>/delete", methods=["POST"])
+def page_delete(pid):
+    db=get_db(); db.execute("DELETE FROM pages WHERE id=?",(pid,)); db.commit(); return redirect(url_for("page_admin"))
+
 # ============================================================ DASHBOARD ============================================================
 @app.route("/")
-def dashboard():
+@app.route("/dashboard")
+def public_home():
     db = get_db()
     members = db.execute("SELECT * FROM members").fetchall()
     admins = db.execute("SELECT * FROM administrators").fetchall()
@@ -331,9 +469,10 @@ def dashboard():
     top_members.sort(key=lambda x: x[1], reverse=True)
     top_members = top_members[:5]
 
-    return render_template("dashboard.html",
+    latest_news = db.execute("SELECT * FROM news WHERE status='published' ORDER BY published_at DESC, created_at DESC LIMIT 5").fetchall()
+    return render_template("public_home.html",
         members_count=len(members), admins_count=len(admins), initiatives_count=len(initiatives),
-        total_hours=total_hours, avg_score=avg_score, avg_att=avg_att,
+        total_hours=total_hours, avg_score=avg_score, avg_att=avg_att, latest_news=latest_news,
         months=months, counts=counts, max_count=max_count, top_members=top_members)
 
 
@@ -375,17 +514,18 @@ def member_form(mid=None):
         if not name:
             flash("يرجى إدخال اسم العضو", "error")
             return redirect(request.url)
+        photo = request.form.get("photo", "")
         data = (name, request.form.get("email", ""), request.form.get("phone", ""),
                 request.form.get("committee", ""), request.form.get("position", "عضو"),
                 request.form.get("join_date", ""), request.form.get("status", "Active"),
-                request.form.get("notes", ""))
+                request.form.get("notes", ""), photo)
         if mid:
             db.execute("""UPDATE members SET name=?,email=?,phone=?,committee=?,position=?,
-                           join_date=?,status=?,notes=? WHERE id=?""", data + (mid,))
+                           join_date=?,status=?,notes=?,photo=? WHERE id=?""", data + (mid,))
             log_action("Updated", f"عضو: {name}")
         else:
-            db.execute("""INSERT INTO members(id,name,email,phone,committee,position,join_date,status,notes,created_at)
-                           VALUES(?,?,?,?,?,?,?,?,?,?)""", (uid("mem"),) + data + (now_iso(),))
+            db.execute("""INSERT INTO members(id,name,email,phone,committee,position,join_date,status,notes,photo,created_at)
+                           VALUES(?,?,?,?,?,?,?,?,?,?,?)""", (uid("mem"),) + data + (now_iso(),))
             log_action("Created", f"عضو: {name}")
         db.commit()
         flash("تم الحفظ بنجاح", "ok")
@@ -440,6 +580,16 @@ def member_view(mid):
         level=member_level(db, mid), breakdown=breakdown, timeline=timeline,
         eval_count=len(evs), ini_count=ini_count, recommendation=recommendation_text(s))
 
+
+@app.route("/admin/members/<mid>/photo", methods=["POST"])
+def member_photo_upload(mid):
+    f=request.files.get("photo_file")
+    if not f or not f.filename: flash("اختر صورة", "error"); return redirect(url_for("member_view", mid=mid))
+    ext=os.path.splitext(secure_filename(f.filename))[1].lower()
+    if ext not in (".jpg",".jpeg",".png",".webp"): flash("صيغة الصورة غير مدعومة", "error"); return redirect(url_for("member_view", mid=mid))
+    filename=f"{mid}{ext}"; f.save(os.path.join(UPLOAD_DIR, filename))
+    db=get_db(); db.execute("UPDATE members SET photo=? WHERE id=?", (f"uploads/{filename}",mid)); db.commit(); log_action("Updated member photo",mid)
+    flash("تم تحديث الصورة الشخصية", "ok"); return redirect(url_for("member_view", mid=mid))
 
 # ============================================================ ADMINISTRATORS ============================================================
 @app.route("/administrators")
@@ -825,6 +975,10 @@ def settings_page():
             new_p = {k: int(request.form.get(f"p_{k}", 0) or 0) for k in DEFAULT_POINTS.keys()}
             set_setting("points", json.dumps(new_p))
             flash("تم حفظ القيم", "ok")
+        elif form_type == "appearance":
+            for key, field in [("accentColor","accent_color"),("navyColor","navy_color"),("backgroundColor","background_color"),("fontFamily","font_family"),("heroTitle","hero_title"),("heroText","hero_text"),("announcement","announcement"),("customCss","custom_css")]:
+                set_setting(key, request.form.get(field, ""))
+            flash("تم تحديث الهوية والمظهر", "ok")
         return redirect(url_for("settings_page"))
     return render_template("settings.html", weights=weights, points_cfg=points_cfg,
                            criteria_keys=CRITERIA_KEYS, criteria_labels=CRITERIA_LABELS,
@@ -898,7 +1052,7 @@ def report_annual():
 def backup_export():
     db = get_db()
     tables = ["users", "members", "administrators", "committees", "initiatives",
-              "initiative_participants", "tasks", "attendance", "evaluations", "points", "audit_logs"]
+              "initiative_participants", "tasks", "attendance", "evaluations", "points", "audit_logs", "news", "pages"]
     data = {}
     for t in tables:
         rows = db.execute(f"SELECT * FROM {t}").fetchall()
@@ -921,7 +1075,7 @@ def backup_import():
         db = get_db()
         table_cols = {
             "users": ["id", "name", "email", "password_hash", "role", "created_at"],
-            "members": ["id", "name", "email", "phone", "committee", "position", "join_date", "status", "notes", "created_at"],
+            "members": ["id", "name", "email", "phone", "committee", "position", "join_date", "status", "notes", "created_at", "photo"],
             "administrators": ["id", "name", "position", "committee", "date", "responsibilities"],
             "committees": ["id", "name", "head", "description"],
             "initiatives": ["id", "name", "date", "location", "manager", "committee", "hours", "status", "description", "goals"],
@@ -933,6 +1087,8 @@ def backup_import():
                              "c_teamwork", "c_creativity"],
             "points": ["id", "member_id", "value", "source", "date"],
             "audit_logs": ["id", "action", "target", "by", "date"],
+            "news": ["id", "title", "slug", "excerpt", "content", "cover_image", "category", "author", "status", "published_at", "created_at"],
+            "pages": ["id", "title", "slug", "content", "status", "show_in_nav", "sort_order", "created_at", "updated_at"],
         }
         for t, cols in table_cols.items():
             if t not in data:
@@ -950,7 +1106,7 @@ def backup_import():
         flash("تم استيراد النسخة الاحتياطية", "ok")
     except Exception:
         flash("الملف غير صالح", "error")
-    return redirect(url_for("dashboard"))
+    return redirect(url_for("public_home"))
 
 
 if __name__ == "__main__":
