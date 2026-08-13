@@ -1,0 +1,60 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="page-head"><div><h1>{{ m['name'] }}</h1><p>{{ m['committee'] or '—' }} · {{ m['position'] or 'عضو' }}</p></div>
+<div class="no-print"><a class="secondary" href="{{ url_for('report_member', mid=m['id']) }}" target="_blank">طباعة الملف</a> {% if is_admin %}<a class="primary" href="{{ url_for('evaluation_new', member_id=m['id']) }}">إضافة تقييم</a></div>{% endif %}</div>
+
+<div class="grid-2">
+  <div class="card panel">
+    <div class="person" style="margin-bottom:18px"><div class="person-avatar" style="width:72px;height:72px;font-size:16px">{% if m['photo'] %}<img class="avatar-img" src="{{ url_for('static',filename=m['photo']) }}">{% else %}{{ m['name'][:2] }}{% endif %}</div><div><h2 style="margin:0;font-size:16px">{{ m['name'] }}</h2><small class="muted">{{ m['email'] or '—' }}</small></div></div>
+    <div class="grid-2" style="gap:10px">
+      <div class="card panel" style="padding:12px"><small class="muted">تاريخ الانضمام</small><br><strong>{{ m['join_date']|fmt_date }}</strong></div>
+      <div class="card panel" style="padding:12px"><small class="muted">الحالة</small><br><strong>{{ m['status'] or 'Active' }}</strong></div>
+    </div>
+    {% if is_admin %}<form method="post" enctype="multipart/form-data" action="{{ url_for('member_photo_upload', mid=m['id']) }}" style="margin-top:14px"><label class="secondary" style="display:inline-block;cursor:pointer">📷 تغيير الصورة<input type="file" name="photo_file" accept="image/*" onchange="this.form.submit()" hidden></label></form>{% endif %}
+  </div>
+  <div class="card panel">
+    <div class="panel-head"><h3>معدل الأداء</h3><span>محسوب تلقائياً</span></div>
+    <div style="font-size:40px;font-weight:900;color:var(--green)">{{ (score ~ '%') if score is not none else '—' }}</div>
+    <div class="progress"><span style="width:{{ score or 0 }}%"></span></div>
+    <p class="muted" style="font-size:11px;margin-bottom:0">{{ 'لا توجد تقييمات بعد.' if score is none else 'مستوى العضو: ' ~ level }}</p>
+  </div>
+</div>
+
+<div class="stats" style="grid-template-columns:repeat(4,1fr);margin-top:14px">
+  <div class="card stat"><div class="label">النقاط</div><div class="value">{{ points|round|int }}</div></div>
+  <div class="card stat"><div class="label">الحضور</div><div class="value">{{ (att ~ '%') if att is not none else '—' }}</div></div>
+  <div class="card stat"><div class="label">المبادرات</div><div class="value">{{ ini_count }}</div></div>
+  <div class="card stat"><div class="label">التقييمات</div><div class="value">{{ eval_count }}</div></div>
+</div>
+
+<div class="grid-2">
+  <div class="card panel">
+    <div class="panel-head"><h3>تفاصيل الأداء</h3></div>
+    {% if score is none %}
+      <div class="empty"><div class="empty-icon">📊</div>لا توجد بيانات تقييم بعد.</div>
+    {% else %}
+      {% for b in breakdown %}
+      <div style="margin-bottom:13px">
+        <div style="display:flex;justify-content:space-between;font-size:11px;margin-bottom:5px"><span>{{ b.label }}</span><b>{{ b.value }}/100</b></div>
+        <div class="progress"><span style="width:{{ b.value }}%"></span></div>
+        <small class="muted">الوزن {{ b.weight }}%</small>
+      </div>
+      {% endfor %}
+    {% endif %}
+  </div>
+  <div class="card panel">
+    <div class="panel-head"><h3>السجل الزمني</h3></div>
+    {% if timeline %}
+      <div class="timeline">
+        {% for t in timeline %}
+        <div class="timeline-item"><strong>{{ t.title }}</strong><small>{{ t.date|fmt_date }} · {{ t.sub }}</small></div>
+        {% endfor %}
+      </div>
+    {% else %}
+      <div class="empty"><div class="empty-icon">🕓</div>لا توجد أحداث مسجلة بعد.</div>
+    {% endif %}
+  </div>
+</div>
+
+<div class="card panel" style="margin-top:16px"><div class="panel-head"><h3>التوصية النهائية</h3></div><p style="font-size:13px">{{ recommendation }}</p></div>
+{% endblock %}
