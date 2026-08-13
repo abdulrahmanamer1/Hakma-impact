@@ -1,0 +1,13 @@
+services:
+  - type: web
+    name: hikma-impact
+    runtime: python
+    buildCommand: pip install -r requirements.txt
+    startCommand: gunicorn app:app
+    envVars:
+      - key: HIKMA_SECRET_KEY
+        generateValue: true
+      - key: HIKMA_OWNER_EMAIL
+        value: Abdulrahman.a.alani1@gmail.com
+      - key: HIKMA_OWNER_PASSWORD
+        sync: false
