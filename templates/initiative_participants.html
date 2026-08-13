@@ -1,0 +1,20 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="page-head"><div><h1>مشاركو المبادرة</h1><p>{{ i['name'] }}</p></div></div>
+<form method="post" class="form-card" style="max-width:520px">
+  {% if members %}
+    {% for m in members %}
+    <label class="list-row" style="cursor:pointer">
+      <span class="person"><span class="person-avatar">{{ m['name'][:2] }}</span><span><strong>{{ m['name'] }}</strong><small>{{ m['committee'] or '—' }}</small></span></span>
+      <input type="checkbox" name="participant" value="{{ m['id'] }}" {{ 'checked' if m['id'] in selected_ids else '' }}>
+    </label>
+    {% endfor %}
+  {% else %}
+    <div class="empty"><div class="empty-icon">👤</div>أضف أعضاء أولاً.</div>
+  {% endif %}
+  <div class="form-actions">
+    <button class="primary" type="submit">حفظ</button>
+    <a class="secondary" href="{{ url_for('initiative_view', iid=i['id']) }}">إلغاء</a>
+  </div>
+</form>
+{% endblock %}
