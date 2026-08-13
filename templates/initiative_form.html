@@ -1,0 +1,35 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="page-head"><div><h1>{{ 'تعديل مبادرة' if i else 'إضافة مبادرة' }}</h1></div></div>
+<form method="post" class="form-card">
+  <div class="form-grid">
+    <div class="field"><label>اسم المبادرة</label><input name="name" value="{{ i['name'] if i else '' }}" required></div>
+    <div class="field"><label>التاريخ</label><input type="date" name="date" value="{{ i['date'] if i else '' }}"></div>
+    <div class="field"><label>المكان</label><input name="location" value="{{ i['location'] if i else '' }}"></div>
+    <div class="field"><label>المسؤول</label>
+      <select name="manager">
+        <option value="">—</option>
+        {% for m in members %}<option {{ 'selected' if i and i['manager']==m['name'] else '' }}>{{ m['name'] }}</option>{% endfor %}
+      </select>
+    </div>
+    <div class="field"><label>اللجنة</label>
+      <select name="committee">
+        <option value="">—</option>
+        {% for c in committees %}<option {{ 'selected' if i and i['committee']==c['name'] else '' }}>{{ c['name'] }}</option>{% endfor %}
+      </select>
+    </div>
+    <div class="field"><label>ساعات التطوع</label><input type="number" step="0.5" name="hours" value="{{ i['hours'] if i else 0 }}"></div>
+    <div class="field"><label>الحالة</label>
+      <select name="status">
+        {% for s in ['Planned','Active','Completed','Cancelled'] %}<option {{ 'selected' if i and i['status']==s else '' }}>{{ s }}</option>{% endfor %}
+      </select>
+    </div>
+    <div class="field full"><label>الوصف</label><textarea name="description">{{ i['description'] if i else '' }}</textarea></div>
+    <div class="field full"><label>الأهداف</label><textarea name="goals">{{ i['goals'] if i else '' }}</textarea></div>
+  </div>
+  <div class="form-actions">
+    <button class="primary" type="submit">حفظ</button>
+    <a class="secondary" href="{{ url_for('initiatives_list') }}">إلغاء</a>
+  </div>
+</form>
+{% endblock %}

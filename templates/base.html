@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>{{ team_name }}</title>
+<link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+<div class="app-shell">
+  <aside class="sidebar" id="sidebar">
+    <div class="brand"><div class="mark">HI</div><div><b>{{ team_name }}</b><small>نظام الأداء والأثر</small></div></div>
+    <nav class="nav">
+      {% set nav_items = [
+        ('dashboard','🏠','الرئيسية'), ('members_list','👥','الأعضاء'), ('admins_list','🧭','الإداريون'),
+        ('committees_list','🗂️','اللجان'), ('initiatives_list','🚀','المبادرات'), ('tasks_list','✅','المهام'),
+        ('attendance_list','📅','الحضور'), ('evaluations_list','📊','التقييمات'), ('achievements','🏅','الإنجازات'),
+        ('reports_page','📄','التقارير'), ('audit_log','🧾','سجل العمليات'), ('settings_page','⚙️','الإعدادات')
+      ] %}
+      {% for endpoint, icon, label in nav_items %}
+        <a href="{{ url_for(endpoint) }}" class="nav-item {{ 'active' if current_endpoint==endpoint or (current_endpoint and current_endpoint.startswith(endpoint.split('_')[0]) and endpoint in ['members_list','admins_list','committees_list','initiatives_list','tasks_list','attendance_list','evaluations_list']) else '' }}">
+          <span>{{ icon }}</span><span>{{ label }}</span>
+        </a>
+      {% endfor %}
+    </nav>
+    <div class="sidebar-foot">
+      <div class="who">{{ session_user['name'] if session_user else '' }}<br><span style="color:#7E93AC;font-size:10px">{{ session_user['role'] if session_user else '' }}</span></div>
+      <a class="nav-item" href="{{ url_for('logout') }}">↩ تسجيل الخروج</a>
+    </div>
+  </aside>
+  <main class="main">
+    <div class="mobile-top no-print">
+      <b>{{ team_name }}</b>
+      <button class="secondary" id="menuBtn" type="button">☰ القائمة</button>
+    </div>
+    {% with messages = get_flashed_messages(with_categories=true) %}
+      {% if messages %}
+        {% for category, message in messages %}
+          <div class="flash {{ 'ok' if category=='ok' else 'error' }}">{{ message }}</div>
+        {% endfor %}
+      {% endif %}
+    {% endwith %}
+    {% block content %}{% endblock %}
+  </main>
+</div>
+<script>
+document.getElementById('menuBtn').addEventListener('click', function(){
+  document.getElementById('sidebar').classList.toggle('open');
+});
+</script>
+</body>
+</html>
