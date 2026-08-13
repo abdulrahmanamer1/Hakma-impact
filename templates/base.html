@@ -1,0 +1,37 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>{{ title or team_name }}</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;800;900&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+<style>:root{--accent:{{ site.accent or '#20B486' }};--navy:{{ site.navy or '#071A2F' }};--bg:{{ site.background or '#F5F7FA' }};}</style>
+</head>
+<body>
+<header class="site-header">
+  <div class="container nav-wrap">
+    <a class="brand" href="{{ url_for('public_home') }}"><span class="brand-mark">HI</span><span>HIKMA<br><b>IMPACT</b></span></a>
+    <button class="menu-btn" onclick="document.body.classList.toggle('nav-open')">☰</button>
+    <nav>
+      <a href="{{ url_for('public_home') }}">الرئيسية</a>
+      <a href="{{ url_for('members_list') }}">الأعضاء</a>
+      <a href="{{ url_for('committees_list') }}">اللجان</a>
+      <a href="{{ url_for('initiatives_list') }}">المبادرات</a>
+      <a href="{{ url_for('public_news') }}">الأخبار</a>
+      <a href="{{ url_for('evaluations') }}">التقييمات</a>
+      <a href="{{ url_for('achievements') }}">الإنجازات</a>
+      {% if is_admin %}
+      <a class="admin-link" href="{{ url_for('admin_dashboard') }}">الإدارة</a>
+      {% endif %}
+    </nav>
+  </div>
+</header>
+{% with messages=get_flashed_messages(with_categories=true) %}
+{% if messages %}<div class="container flashes">{% for cat,msg in messages %}<div class="flash {{cat}}">{{msg}}</div>{% endfor %}</div>{% endif %}
+{% endwith %}
+<main>{% block content %}{% endblock %}</main>
+<footer><div class="container footer-inner"><strong>HIKMA IMPACT</strong><span>أثر يُقاس، وقيادة تُصنع</span><span>© {{year}}</span></div></footer>
+</body></html>
