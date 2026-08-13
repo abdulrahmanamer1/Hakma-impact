@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>{% block title %}{{ team_name }}{% endblock %}</title>
+<link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+<style>:root{--green:{{ site_settings.accentColor or '#20B486' }};--navy-dark:{{ site_settings.navyColor or '#071A2F' }};--bg:{{ site_settings.backgroundColor or '#F5F7FA' }}} body{font-family:'{{ site_settings.fontFamily or 'Tajawal' }}',sans-serif}.public-nav{display:flex;gap:6px;align-items:center;flex-wrap:wrap}.public-nav a{padding:8px 10px;border-radius:9px;font-size:12px}.public-nav a:hover{background:#eef5f2}.admin-pill{background:var(--green);color:#04241a!important;font-weight:800}.announcement{background:var(--navy-dark);color:#fff;padding:8px 14px;font-size:11px;text-align:center}.avatar-img{width:100%;height:100%;object-fit:cover}</style>
+{% if site_settings.customCss %}<style>{{ site_settings.customCss|safe }}</style>{% endif %}
+</head>
+<body>
+{% if site_settings.announcement %}<div class="announcement">{{ site_settings.announcement }}</div>{% endif %}
+{% if is_admin %}
+<div class="app-shell">
+  <aside class="sidebar" id="sidebar">
+    <div class="brand">{% if site_settings.teamLogo %}<img src="{{ url_for('static', filename=site_settings.teamLogo) }}" style="width:42px;height:42px;border-radius:12px;object-fit:cover">{% else %}<div class="mark">HI</div>{% endif %}<div><b>{{ team_name }}</b><small>مركز التحكم</small></div></div>
+    <nav class="nav">
+      {% set nav_items=[('admin_dashboard','🏠','لوحة التحكم'),('members_list','👥','الأعضاء'),('committees_list','🗂️','اللجان'),('initiatives_list','🚀','المبادرات'),('tasks_list','✅','المهام'),('attendance_list','📅','الحضور'),('evaluations_list','📊','التقييمات'),('achievements','🏅','الإنجازات'),('news_admin','📰','الأخبار والنشر'),('page_admin','🧩','منشئ الصفحات'),('reports_page','📄','التقارير'),('admin_users','🔐','حسابات الإداريين'),('admins_list','🛡️','الإداريون'),('audit_log','🧾','سجل العمليات'),('settings_page','⚙️','الإعدادات') ] %}
+      {% for endpoint,icon,label in nav_items %}<a href="{{ url_for(endpoint) }}" class="nav-item {{ 'active' if current_endpoint==endpoint else '' }}"><span>{{ icon }}</span><span>{{ label }}</span></a>{% endfor %}
+    </nav>
+    <div class="sidebar-foot"><div class="who">{{ session_user['name'] if session_user else '' }}<br><span style="color:#7E93AC;font-size:10px">{{ session_user['role'] if session_user else '' }}</span></div><a class="nav-item" href="{{ url_for('public_home') }}">🌐 الموقع العام</a><a class="nav-item" href="{{ url_for('logout') }}">↩ تسجيل الخروج</a></div>
+  </aside>
+  <main class="main"><div class="mobile-top no-print"><b>{{ team_name }}</b><button class="secondary" id="menuBtn" type="button">☰ القائمة</button></div>
+{% else %}
+<header style="background:#fff;border-bottom:1px solid #e7edf2;position:sticky;top:0;z-index:30"><div style="max-width:1200px;margin:auto;padding:12px 18px;display:flex;justify-content:space-between;align-items:center;gap:12px"><a href="{{ url_for('public_home') }}" style="font-weight:900;color:var(--navy-dark);display:flex;align-items:center;gap:8px">{% if site_settings.teamLogo %}<img src="{{ url_for('static', filename=site_settings.teamLogo) }}" style="width:32px;height:32px;border-radius:9px;object-fit:cover">{% endif %}{{ team_name }}</a><nav class="public-nav"><a href="{{ url_for('public_home') }}">الرئيسية</a><a href="{{ url_for('public_news') }}">الأخبار</a><a href="{{ url_for('members_list') }}">الأعضاء</a><a href="{{ url_for('committees_list') }}">اللجان</a><a href="{{ url_for('initiatives_list') }}">المبادرات</a><a href="{{ url_for('evaluations_list') }}">التقييمات</a><a href="{{ url_for('achievements') }}">الإنجازات</a><a href="{{ url_for('admins_list') }}">الإدارة</a><a href="{{ url_for('admin_login') }}" class="admin-pill">الإدارة</a></nav></div></header><main style="max-width:1200px;margin:auto;padding:20px">
+{% endif %}
+{% with messages=get_flashed_messages(with_categories=true) %}{% if messages %}{% for category,message in messages %}<div class="flash {{ 'ok' if category=='ok' else 'error' }}">{{ message }}</div>{% endfor %}{% endif %}{% endwith %}
+{% block content %}{% endblock %}
+{% if is_admin %}</main></div><script>document.getElementById('menuBtn')?.addEventListener('click',()=>document.getElementById('sidebar').classList.toggle('open'));</script>{% else %}<script>document.querySelectorAll('a[href*="/new"],a[href*="/edit"],a[href*="/delete"]').forEach(e=>e.remove());document.querySelectorAll('form[method="post"]').forEach(e=>e.remove());</script></main>{% endif %}
+</body></html>

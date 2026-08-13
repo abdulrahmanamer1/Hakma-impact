@@ -1,1 +1,11 @@
-
+{% extends "base.html" %}
+{% block title %}الأخبار — {{team_name}}{% endblock %}
+{% block content %}
+<div class="page-head"><div><h1>الأخبار والنشر</h1><p>منشورات الفريق وأخباره — بأسلوب بصري قريب من بطاقات Instagram.</p></div></div>
+<div class="post-grid">
+{% for n in news %}<article class="post-card">
+  <a href="{{url_for('public_news_detail',slug=n['slug'])}}" class="post-cover">{% if n['cover_image'] %}<img src="{{url_for('static',filename=n['cover_image'])}}" alt="">{% else %}<div class="post-placeholder">HIKMA IMPACT</div>{% endif %}</a>
+  <div class="post-body"><div class="post-meta"><span class="badge">{{n['category']}}</span><small>{{n['published_at']|fmt_date}}</small></div><h2><a href="{{url_for('public_news_detail',slug=n['slug'])}}">{{n['title']}}</a></h2><p>{{n['excerpt']}}</p><a class="post-more" href="{{url_for('public_news_detail',slug=n['slug'])}}">قراءة المنشور ←</a></div>
+</article>{% else %}<div class="empty">لا توجد أخبار منشورة.</div>{% endfor %}
+</div>
+{% endblock %}

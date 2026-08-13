@@ -1,0 +1,23 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="page-head"><div><h1>الإداريون</h1><p>إدارة المسؤولين والأداء الإداري.</p></div><a class="primary" href="{{ url_for('admin_new') }}">+ إضافة إداري</a></div>
+{% if admins %}
+<div class="cards">
+  {% for a in admins %}
+  <div class="card member-card">
+    <div class="person">{% if a['photo'] %}<img class="person-avatar" style="object-fit:cover" src="{{url_for('static',filename=a['photo'])}}">{% else %}<div class="person-avatar">{{ a['name'][:2] }}</div>{% endif %}<div><strong>{{ a['name'] }}</strong><small>{{ a['position'] or 'إداري' }}</small></div></div>
+    <div style="margin-top:14px"><span class="badge">{{ a['committee'] or '—' }}</span></div>
+    <p class="muted" style="font-size:11px;margin:10px 0 0">{{ a['responsibilities'] or 'لا توجد مسؤوليات مسجلة.' }}</p>
+    <form method="post" enctype="multipart/form-data" action="{{url_for('admin_photo_upload',aid=a['id'])}}" style="margin-top:12px"><input type="file" name="photo_file" accept="image/*" required><button class="small-btn" type="submit">رفع الصورة</button></form><div class="actions" style="margin-top:14px">
+      <a class="small-btn" href="{{ url_for('admin_edit', aid=a['id']) }}">تعديل</a>
+      <form method="post" action="{{ url_for('admin_delete', aid=a['id']) }}" style="display:inline" onsubmit="return confirm('حذف الإداري؟');">
+        <button class="small-btn danger" type="submit">حذف</button>
+      </form>
+    </div>
+  </div>
+  {% endfor %}
+</div>
+{% else %}
+<div class="empty"><div class="empty-icon">🧭</div>لا يوجد إداريون مضافون حالياً.<div style="margin-top:12px"><a class="primary" href="{{ url_for('admin_new') }}">+ إضافة إداري</a></div></div>
+{% endif %}
+{% endblock %}
