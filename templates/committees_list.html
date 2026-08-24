@@ -1,0 +1,24 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="page-head"><div><h1>اللجان</h1><p>إدارة هيكل اللجان وأعضائها.</p></div><a class="primary" href="{{ url_for('committee_new') }}">+ إضافة لجنة</a></div>
+{% if data %}
+<div class="cards">
+  {% for row in data %}
+  {% set c = row.c %}
+  <div class="card member-card">
+    <h3 style="margin:0;font-size:14px">{{ c['name'] }}</h3>
+    <p class="muted" style="font-size:11px">{{ c['description'] or '' }}</p>
+    <div style="margin-top:12px"><span class="badge">الأعضاء: {{ row.member_count }}</span> <span class="badge">الرئيس: {{ c['head'] or '—' }}</span></div>
+    <div class="actions" style="margin-top:14px">
+      <a class="small-btn" href="{{ url_for('committee_edit', cid=c['id']) }}">تعديل</a>
+      <form method="post" action="{{ url_for('committee_delete', cid=c['id']) }}" style="display:inline" onsubmit="return confirm('حذف اللجنة؟');">
+        <button class="small-btn danger" type="submit">حذف</button>
+      </form>
+    </div>
+  </div>
+  {% endfor %}
+</div>
+{% else %}
+<div class="empty"><div class="empty-icon">🗂️</div>لا توجد لجان حالياً.<div style="margin-top:12px"><a class="primary" href="{{ url_for('committee_new') }}">+ إضافة لجنة</a></div></div>
+{% endif %}
+{% endblock %}
