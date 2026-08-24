@@ -1,0 +1,31 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="page-head"><div><h1>{{ 'تعديل مهمة' if t else 'إضافة مهمة' }}</h1></div></div>
+<form method="post" class="form-card">
+  <div class="form-grid">
+    <div class="field full"><label>عنوان المهمة</label><input name="title" value="{{ t['title'] if t else '' }}" required></div>
+    <div class="field"><label>المسؤول</label>
+      <select name="assignee">
+        <option value="">—</option>
+        {% for m in members %}<option {{ 'selected' if t and t['assignee']==m['name'] else '' }}>{{ m['name'] }}</option>{% endfor %}
+      </select>
+    </div>
+    <div class="field"><label>الموعد</label><input type="date" name="deadline" value="{{ t['deadline'] if t else '' }}"></div>
+    <div class="field"><label>الأولوية</label>
+      <select name="priority">
+        {% for p in ['منخفضة','متوسطة','عالية'] %}<option {{ 'selected' if t and t['priority']==p else '' }}>{{ p }}</option>{% endfor %}
+      </select>
+    </div>
+    <div class="field"><label>الحالة</label>
+      <select name="status">
+        {% for s in ['Todo','In Progress','Completed','Overdue'] %}<option {{ 'selected' if t and t['status']==s else '' }}>{{ s }}</option>{% endfor %}
+      </select>
+    </div>
+    <div class="field full"><label>الوصف</label><textarea name="description">{{ t['description'] if t else '' }}</textarea></div>
+  </div>
+  <div class="form-actions">
+    <button class="primary" type="submit">حفظ</button>
+    <a class="secondary" href="{{ url_for('tasks_list') }}">إلغاء</a>
+  </div>
+</form>
+{% endblock %}
