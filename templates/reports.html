@@ -1,0 +1,70 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="page-head"><div><h1>التقارير</h1><p>تقارير قابلة للطباعة والتصدير من البيانات الفعلية.</p></div></div>
+<div class="cards">
+  <div class="card panel">
+    <h3 style="margin-top:0;font-size:14px">تقرير عضو</h3>
+    <p class="muted" style="font-size:11px;line-height:1.9">اختر عضواً ثم أنشئ تقريراً رسمياً.</p>
+    {% if members %}
+    <form method="get" action="{{ url_for('report_member', mid='PLACEHOLDER') }}" onsubmit="this.action=this.action.replace('PLACEHOLDER', this.mid.value); return true;">
+      <select name="mid" style="width:100%;margin-bottom:8px;border:1px solid #E3E8EF;border-radius:9px;padding:8px">
+        {% for m in members %}<option value="{{ m['id'] }}">{{ m['name'] }}</option>{% endfor %}
+      </select>
+      <button class="primary" type="submit">إنشاء التقرير</button>
+    </form>
+    {% else %}
+      <p class="muted" style="font-size:11px">لا يوجد أعضاء بعد</p>
+    {% endif %}
+  </div>
+  <div class="card panel">
+    <h3 style="margin-top:0;font-size:14px">تقرير مبادرة</h3>
+    <p class="muted" style="font-size:11px;line-height:1.9">تقرير كامل عن مبادرة ومشاركيها.</p>
+    {% if initiatives %}
+    <form method="get" action="{{ url_for('report_initiative', iid='PLACEHOLDER') }}" onsubmit="this.action=this.action.replace('PLACEHOLDER', this.iid.value); return true;">
+      <select name="iid" style="width:100%;margin-bottom:8px;border:1px solid #E3E8EF;border-radius:9px;padding:8px">
+        {% for i in initiatives %}<option value="{{ i['id'] }}">{{ i['name'] }}</option>{% endfor %}
+      </select>
+      <button class="primary" type="submit">إنشاء التقرير</button>
+    </form>
+    {% else %}
+      <p class="muted" style="font-size:11px">لا توجد مبادرات بعد</p>
+    {% endif %}
+  </div>
+  <div class="card panel">
+    <h3 style="margin-top:0;font-size:14px">تقرير شهري</h3>
+    <p class="muted" style="font-size:11px;line-height:1.9">ملخص الأداء والنشاط الشهري.</p>
+    <a class="primary" href="{{ url_for('report_monthly') }}" target="_blank">إنشاء التقرير</a>
+  </div>
+  <div class="card panel">
+    <h3 style="margin-top:0;font-size:14px">تقرير سنوي</h3>
+    <p class="muted" style="font-size:11px;line-height:1.9">ملخص سنوي للفريق.</p>
+    <a class="primary" href="{{ url_for('report_annual') }}" target="_blank">إنشاء التقرير</a>
+  </div>
+</div>
+<div class="card panel" style="margin-top:16px;border:1px solid rgba(32,180,134,.35);background:linear-gradient(135deg,rgba(7,22,37,.98),rgba(8,35,55,.96));color:#fff">
+  <div class="panel-head"><div><h3 style="margin:0;color:#fff">📊 التصدير الشامل</h3><p style="margin:6px 0 0;color:#B7C7D8;font-size:11px;line-height:1.8">يجمع معلومات الأعضاء والإداريين والمبادرات والفعاليات والأخبار والمهام والحضور والتقييمات والنقاط والشهادات والساعات والإحصائيات في ملف واحد، بتصميم مضغوط للطباعة بأقل عدد ممكن من الصفحات.</p></div></div>
+  <form method="get" style="display:flex;gap:8px;flex-wrap:wrap;align-items:end;margin-top:12px">
+    <label style="font-size:11px;color:#D7E3EF">من<br><input type="date" name="from" style="margin-top:4px;padding:8px;border-radius:8px;border:1px solid #29445C;background:#0B1A29;color:#fff"></label>
+    <label style="font-size:11px;color:#D7E3EF">إلى<br><input type="date" name="to" style="margin-top:4px;padding:8px;border-radius:8px;border:1px solid #29445C;background:#0B1A29;color:#fff"></label>
+    <button class="primary" type="submit" formaction="{{ url_for('export_complete_pdf') }}">🖨️ PDF للطباعة</button>
+    <button class="secondary" type="submit" formaction="{{ url_for('export_complete_xlsx') }}">📗 Excel للتدقيق والتحليل</button>
+  </form>
+  <p style="font-size:10px;color:#8FA7BC;margin:9px 0 0">PDF: A4 أفقي، جداول مضغوطة، عناوين متكررة، بدون مساحات كبيرة. Excel: جميع البيانات المهمة في أوراق منفصلة.</p>
+</div>
+
+<div class="card panel" style="margin-top:16px">
+  <div class="panel-head"><h3>النسخ الاحتياطي</h3></div>
+  <div style="display:flex;gap:10px;flex-wrap:wrap">
+    <a class="primary" href="{{ url_for('backup_export') }}">تصدير بيانات النظام JSON</a>
+    <button class="secondary" type="button" onclick="document.getElementById('restoreFile').click()">استيراد نسخة احتياطية</button>
+    <form id="restoreForm" method="post" action="{{ url_for('backup_import') }}" enctype="multipart/form-data" style="display:none">
+      <input id="restoreFile" type="file" name="backup_file" accept=".json" onchange="document.getElementById('restoreForm').submit()">
+    </form>
+    <form method="post" action="{{ url_for('backup_full_import') }}" enctype="multipart/form-data" style="display:inline">
+      <input id="restoreFullFile" type="file" name="full_backup_file" accept=".zip" style="display:none" onchange="this.form.submit()">
+      <button class="secondary" type="button" onclick="document.getElementById('restoreFullFile').click()">استرجاع النسخة الكاملة ZIP</button>
+    </form>
+  </div>
+  <p class="muted" style="font-size:10px;margin-bottom:0;margin-top:8px">البيانات محفوظة على قاعدة بيانات السيرفر.</p>
+</div>
+{% endblock %}
