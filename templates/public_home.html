@@ -1,0 +1,49 @@
+{% extends "base.html" %}
+{% block title %}{{ team_name }} — الأثر يبدأ من هنا{% endblock %}
+{% block content %}
+<section class="public-hero">
+  <div class="hero-glow"></div>
+  <div class="public-hero-copy">
+    <span class="eyebrow">HIKMA IMPACT · STUDENT TEAM</span>
+    <h1>{{ site_settings.heroTitle or 'نصنع الأثر، ونبني الإنسان.' }}</h1>
+    <p>{{ site_settings.heroText or 'منصة فريق الحكمة الطلابي التي توثق المبادرات، تقيس الأثر، وتحوّل العمل التطوعي إلى تجربة مؤسسية.' }}</p>
+    <div class="hero-actions"><a class="hero-btn primary" href="#impact">اكتشف أثرنا</a><a class="hero-btn ghost" href="#initiatives">استكشف المبادرات</a></div>
+    <div class="hero-meta"><span>تطوع</span><i></i><span>تعلم</span><i></i><span>تطور</span></div>
+  </div>
+  <div class="hero-orbit"><div class="orbit-card orbit-main"><span>IMPACT SCORE</span><strong>{{ avg_score if avg_score is not none else '—' }}{% if avg_score is not none %}%{% endif %}</strong><small>مؤشر الأداء العام</small></div><div class="orbit-card orbit-a"><b>{{ initiatives_count }}</b><small>مبادرة</small></div><div class="orbit-card orbit-b"><b>{{ total_hours|round|int }}</b><small>ساعة أثر</small></div></div>
+</section>
+
+<section id="impact" class="section-block">
+  <div class="section-head"><div><span class="eyebrow dark">OUR IMPACT</span><h2>أرقام تحكي قصتنا.</h2><p>كل رقم هنا مرتبط بنشاط حقيقي داخل الفريق.</p></div></div>
+  <div class="impact-grid">
+    <div class="impact-card"><span>الأعضاء</span><strong>{{ members_count }}</strong><small>عضو مسجل في المنظومة</small></div>
+    <div class="impact-card accent"><span>المبادرات</span><strong>{{ initiatives_count }}</strong><small>مبادرة وفعالية موثقة</small></div>
+    <div class="impact-card"><span>ساعات التطوع</span><strong>{{ total_hours|round|int }}</strong><small>ساعة من العمل التطوعي</small></div>
+    <div class="impact-card"><span>الالتزام</span><strong>{{ avg_att ~ '%' if avg_att is not none else '—' }}</strong><small>متوسط الحضور والمتابعة</small></div>
+  </div>
+</section>
+
+<section id="initiatives" class="section-block section-tint">
+  <div class="section-head"><div><span class="eyebrow dark">OUR WORK</span><h2>مبادرات تصنع فرقًا.</h2><p>من الفكرة إلى التنفيذ ثم قياس الأثر.</p></div><a class="text-link" href="{{ url_for('initiatives_list') }}">عرض المبادرات ←</a></div>
+  <div class="initiative-showcase">
+    {% for i in featured %}<article class="public-initiative"><div class="initiative-number">{{ '%02d'|format(loop.index) }}</div><div><span class="tag">{{ i['committee'] or 'HIKMA IMPACT' }}</span><h3>{{ i['name'] }}</h3><p>{{ i['description'] or i['goals'] or 'مبادرة من مبادرات فريق الحكمة الطلابي.' }}</p><div class="mini-meta"><span>📅 {{ i['date']|fmt_date }}</span><span>📍 {{ i['location'] or '—' }}</span><span>⏱ {{ i['hours'] or 0 }} ساعة</span></div></div><a class="circle-arrow" href="{{ url_for('initiative_view', iid=i['id']) }}">↗</a></article>{% else %}<div class="empty">ستظهر المبادرات المنشورة هنا.</div>{% endfor %}
+  </div>
+</section>
+
+<section class="section-block">
+  <div class="section-head"><div><span class="eyebrow dark">COMMITTEES</span><h2>نشتغل كمنظومة واحدة.</h2><p>كل لجنة لها دور، وكل دور يصنع جزءًا من الأثر.</p></div></div>
+  <div class="committee-public-grid">{% for c in committees %}<article class="committee-public"><div class="committee-icon">✦</div><span>COMMITTEE</span><h3>{{ c['name'] }}</h3><p>{{ c['description'] or 'إحدى الوحدات التشغيلية لفريق الحكمة الطلابي.' }}</p><small>{{ c['head'] or 'فريق الحكمة الطلابي' }}</small></article>{% else %}<div class="empty">سيتم عرض اللجان هنا.</div>{% endfor %}</div>
+</section>
+
+<section class="section-block section-dark">
+  <div class="split-head"><div><span class="eyebrow">UPCOMING</span><h2>القادم أقرب مما تتوقع.</h2><p>تابع المبادرات والفعاليات القادمة.</p></div><a class="hero-btn ghost" href="{{ url_for('public_news') }}">آخر الأخبار</a></div>
+  <div class="upcoming-grid">{% for i in upcoming %}<div class="upcoming-card"><div class="date-box"><b>{{ i['date'][8:10] if i['date'] else '—' }}</b><span>{{ i['date'][5:7] if i['date'] else '' }}</span></div><div><span>{{ i['committee'] or 'HIKMA IMPACT' }}</span><h3>{{ i['name'] }}</h3><small>{{ i['location'] or 'الموقع يعلن لاحقًا' }}</small></div></div>{% else %}<div class="empty light">لا توجد فعاليات قادمة معلنة حاليًا.</div>{% endfor %}</div>
+</section>
+
+<section class="section-block news-section">
+  <div class="section-head"><div><span class="eyebrow dark">LATEST NEWS</span><h2>من قلب الفريق.</h2></div><a class="text-link" href="{{ url_for('public_news') }}">كل الأخبار ←</a></div>
+  <div class="news-public-grid">{% for n in latest_news %}<a class="news-public-card" href="{{ url_for('public_news_detail',slug=n['slug']) }}"><div class="news-cover">{% if n['cover_image'] %}<img src="{{ n['cover_image'] }}" alt="">{% else %}<span>HI</span>{% endif %}</div><div class="news-copy"><small>{{ n['category'] or 'أخبار' }} · {{ n['published_at']|fmt_date }}</small><h3>{{ n['title'] }}</h3><p>{{ n['excerpt'] or '' }}</p></div></a>{% else %}<div class="empty">لا توجد أخبار منشورة بعد.</div>{% endfor %}</div>
+</section>
+
+<section class="join-cta"><div><span class="eyebrow">BE PART OF THE IMPACT</span><h2>عندك طاقة؟ خلّي إلها أثر.</h2><p>باب التطوع يبدأ من هنا. شاركنا مهارتك، وقتك، وفكرتك.</p></div><a href="#" class="hero-btn primary">انضم إلى الفريق ↗</a></section>
+{% endblock %}
