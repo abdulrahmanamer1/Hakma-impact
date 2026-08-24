@@ -1,0 +1,22 @@
+{% extends "base.html" %}{% block content %}
+<div class="page-head"><div><span class="eyebrow dark">AHVT QR SCANNER</span><h1>📷 مسح QR بالكاميرا</h1><p>افتح كاميرا الموبايل من داخل المنصة. بعد قراءة بطاقة AHVT تُسجل العملية تلقائيًا.</p></div></div>
+<section class="control-card qr-scanner-card">
+<div id="qr-reader" style="width:min(620px,100%);margin:auto;border-radius:20px;overflow:hidden;background:#020912"></div>
+<div id="scan-status" class="live-room-note" style="margin-top:14px;text-align:center">اضغط بدء الكاميرا واسمح للمتصفح بالوصول إلى الكاميرا.</div>
+<div class="actions" style="justify-content:center;margin-top:14px"><button id="startScan" class="primary" type="button">📷 بدء الكاميرا</button><button id="stopScan" class="secondary" type="button">إيقاف</button></div>
+<div class="feature-list" style="margin-top:18px"><p>السياق الحالي: <b>{{'الحضور' if mode=='attendance' else 'المهام' if mode=='task' else 'المعدات' if mode=='equipment' else 'الفعاليات'}}</b></p><p>الوقت والتاريخ يؤخذان تلقائيًا من المنصة عند نجاح المسح.</p><p>إذا ضاعت البطاقة يمكنك استخدام التسجيل اليدوي من القسم نفسه.</p></div>
+</section>
+<script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
+<script>
+(()=>{
+ const mode={{mode|tojson}}, recordId={{record_id|tojson}}, equipmentId={{equipment_id|tojson}};
+ const status=document.getElementById('scan-status'); let scanner=null, running=false, busy=false;
+ async function stop(){if(scanner&&running){try{await scanner.stop();}catch(e){} try{await scanner.clear();}catch(e){} running=false;}}
+ async function onScan(decoded){if(busy)return; busy=true; status.textContent='تمت قراءة QR… جارٍ تسجيل العملية تلقائيًا';
+  try{const r=await fetch('{{url_for("admin_qr_scan_api")}}',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({raw:decoded,mode,record_id:recordId,equipment_id:equipmentId})});const d=await r.json();if(!d.ok){status.textContent=d.error||'تعذر تنفيذ العملية';busy=false;return;}status.textContent=d.message||'تم التسجيل بنجاح';await stop();setTimeout(()=>history.back(),900);}catch(e){status.textContent='تعذر الاتصال بالخادم';busy=false;}
+ }
+ async function start(){if(running)return; status.textContent='جاري تشغيل كاميرا الهاتف…'; scanner=new Html5Qrcode('qr-reader'); try{await scanner.start({facingMode:{ideal:'environment'}},{fps:10,qrbox:{width:250,height:250}},onScan,()=>{});running=true;status.textContent='وجّه الكاميرا نحو QR البطاقة';}catch(e){status.textContent='تعذر فتح الكاميرا: '+(e.message||'تحقق من إذن الكاميرا وHTTPS');try{await scanner.clear()}catch(_){}}}
+ document.getElementById('startScan').onclick=start; document.getElementById('stopScan').onclick=stop; window.addEventListener('beforeunload',stop);
+})();
+</script>
+{% endblock %}
