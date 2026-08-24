@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<title>تقرير مبادرة — {{ i['name'] }}</title>
+<link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+<style>body{background:#fff;padding:26px} .stat{border:1px solid #E3E8EF}</style>
+</head>
+<body onload="setTimeout(()=>window.print(),300)">
+<div class="print-report">
+  <div class="hero"><h1>HIKMA IMPACT</h1><p>تقرير مبادرة</p></div>
+  <div class="card panel">
+    <h2>{{ i['name'] }}</h2>
+    <p>{{ i['date']|fmt_date }} · {{ i['location'] or '—' }}</p>
+    <p>{{ i['description'] or '' }}</p>
+  </div>
+  <div class="grid-3" style="margin-top:14px">
+    <div class="card stat"><div class="label">المشاركون</div><div class="value">{{ participants|length }}</div></div>
+    <div class="card stat"><div class="label">الساعات</div><div class="value">{{ i['hours']|round|int if i['hours'] else 0 }}</div></div>
+    <div class="card stat"><div class="label">الحالة</div><div class="value">{{ i['status'] or 'Planned' }}</div></div>
+  </div>
+  <div class="card panel" style="margin-top:14px">
+    <h3>المشاركون</h3>
+    {% if participants %}
+      {% for m in participants %}<p style="font-size:11px">{{ m['name'] }} — {{ m['committee'] or '—' }}</p>{% endfor %}
+    {% else %}
+      <p>لا يوجد مشاركون.</p>
+    {% endif %}
+  </div>
+  <p style="text-align:center;color:#64748B;font-size:9px;margin-top:22px">فريق الحكمة التطوعي · {{ today }}</p>
+</div>
+</body>
+</html>
