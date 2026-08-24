@@ -1,0 +1,18 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="page-head"><div><span class="eyebrow dark">ADMIN PROFILE</span><h1>{{ 'تعديل إداري' if a else 'إضافة إداري' }}</h1></div></div>
+<form method="post" enctype="multipart/form-data" class="form-card">
+<div class="profile-upload"><div class="profile-preview">{% if a and a['photo'] %}<img src="{{url_for('static',filename=a['photo'])}}">{% else %}🛡️{% endif %}</div><div><label>صورة الإداري</label><input type="file" name="photo_file" accept="image/*"><small>سيتم حفظ الصورة بصيغة JPG.</small></div></div>
+<div class="form-grid">
+<div class="field"><label>الاسم</label><input name="name" value="{{a['name'] if a else ''}}" required></div>
+<div class="field"><label>المنصب</label><input name="position" value="{{a['position'] if a else ''}}"></div>
+<div class="field"><label>القسم</label><input name="department" value="{{a['department'] if a else ''}}"></div>
+<div class="field"><label>اللجنة</label><select name="committee"><option value="">—</option>{% for c in committees %}<option {{'selected' if a and a['committee']==c['name'] else ''}}>{{c['name']}}</option>{% endfor %}</select></div>
+<div class="field"><label>رقم البطاقة</label><input name="membership_no" value="{{a['membership_no'] if a else ''}}"></div>
+<div class="field"><label>تاريخ التكليف</label><input type="date" name="date" value="{{a['date'] if a else ''}}"></div>
+<div class="field"><label>إصدار البطاقة</label><input type="date" name="card_issue_date" value="{{a['card_issue_date'] if a else ''}}"></div>
+<div class="field"><label>انتهاء البطاقة</label><input type="date" name="card_expiry" value="{{a['card_expiry'] if a else ''}}"></div>
+<div class="field"><label>NFC UID</label><input name="nfc_uid" value="{{a['nfc_uid'] if a else ''}}"></div>
+<div class="field full"><label class="checkline"><input type="checkbox" name="card_public" {% if a and a['card_public'] %}checked{% endif %}> السماح بظهور البطاقة إلكترونيًا للعامة</label></div><div class="field full"><label>المسؤوليات</label><textarea name="responsibilities">{{a['responsibilities'] if a else ''}}</textarea></div>
+</div><div class="form-actions"><button class="primary">حفظ</button>{% if a %}<a class="secondary" href="{{url_for('card_print',kind='admin',record_id=a['id'])}}">🪪 البطاقة الإدارية</a>{% endif %}<a class="secondary" href="{{url_for('admins_list')}}">إلغاء</a></div></form>
+{% endblock %}
