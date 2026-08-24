@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>HIKMA IMPACT — تسجيل الدخول</title>
+<link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+<div class="login-wrap">
+  <div class="login-box">
+    <div style="text-align:center;margin-bottom:22px">
+      <div class="logo-mark">HI</div>
+      <h1 style="color:#fff;font-size:20px;margin:0">HIKMA IMPACT</h1>
+      <p style="color:#B9C6D8;font-size:12px;margin:4px 0 0">نظام إدارة الأداء والأثر التطوعي</p>
+    </div>
+    <div class="card" style="padding:20px">
+      <div class="login-tabs">
+        <a class="active" href="{{ url_for('login') }}">تسجيل الدخول</a>
+        <a href="{{ url_for('signup') }}">حساب جديد</a>
+      </div>
+      {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+          {% for category, message in messages %}
+            <div class="flash {{ 'ok' if category=='ok' else 'error' }}">{{ message }}</div>
+          {% endfor %}
+        {% endif %}
+      {% endwith %}
+      <form method="post">
+        <input class="auth-input" name="email" type="email" required placeholder="البريد الإلكتروني">
+        <input class="auth-input" name="password" type="password" required placeholder="كلمة المرور">
+        <button class="primary" style="width:100%">تسجيل الدخول</button>
+        {% if not has_users %}
+          <p style="font-size:11px;color:#94A3B8;text-align:center;margin:10px 0 0">لا يوجد مستخدمون بعد — أنشئ حساب المدير أولاً.</p>
+        {% endif %}
+      </form>
+    </div>
+  </div>
+</div>
+</body>
+</html>
