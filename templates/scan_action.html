@@ -1,6 +1,0 @@
-{% extends 'base.html' %}{% block content %}
-<div class="scan-card">
-<span class="eyebrow dark">HIKMA SCAN</span><h1>📷 {{title}}</h1>
-<p>{{record['title'] if record['title'] else record['name']}}</p>
-{% if is_admin %}<a class="primary" href="{{action_url}}">فتح القسم وتسجيل الإجراء</a>{% else %}<p class="muted">سجّل الدخول من أجل تنفيذ الإجراء من خلال QR.</p>{% endif %}
-</div>{% endblock %}
