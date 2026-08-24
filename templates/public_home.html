@@ -1,0 +1,91 @@
+{% extends "base.html" %}
+{% block title %}HIKMA IMPACT — {{ site_settings.siteDescription }}{% endblock %}
+{% block content %}
+
+<section class="h10-hero">
+  {% if site_settings.heroBackground %}<div class="h10-hero-bg" style="background-image:url('{{ url_for('static',filename=site_settings.heroBackground) }}')"></div>{% endif %}
+  {% if site_settings.heroVideo %}<video autoplay muted loop playsinline src="{{ url_for('static',filename=site_settings.heroVideo) }}"></video>{% endif %}
+  <div class="h10-hero-content">
+    <div class="h10-kicker">فريق الحكمة الطلابي</div>
+    <h1>HIKMA IMPACT</h1>
+    <h2>{{ site_settings.heroTitle or 'منصة الحكمة لإدارة الأثر والمبادرات والأداء التطوعي' }}</h2>
+    <p>{{ site_settings.siteDescription }}</p>
+    <div class="h10-actions">
+      <a class="h10-btn primary" href="{{ url_for('public_news') }}">آخر الأخبار</a>
+      <a class="h10-btn ghost" href="{{ url_for('initiatives_list') }}">استكشف المبادرات</a>
+      {% if site_settings.joinButtonVisible != '0' and "hero" in (site_settings.joinButtonPlacement or "hero") %}
+      <a class="h10-btn ghost" href="{{ telegram_url }}" target="_blank" rel="noopener">{{ site_settings.joinButtonIcon or '↗' }} {{ site_settings.joinButtonText or 'انضم إلى الفريق' }}</a>
+      {% endif %}
+    </div>
+  </div>
+</section>
+
+{% if live_session and site_settings.liveEnabled != "0" %}
+<section class="h10-section">
+  <div class="h10-card h10-live-card">
+    <div><div class="h10-live-badge"><span class="h10-live-dot"></span> بث مباشر الآن</div><h2>{{ live_session['title'] or 'بث مباشر من فريق الحكمة' }}</h2><p>{{ live_session['description'] or 'تابع المبادرة مباشرة من HIKMA IMPACT.' }}</p></div>
+    <a class="h10-btn primary" style="background:var(--h-navy);color:#fff" href="{{ url_for('live_public') }}">مشاهدة البث</a>
+  </div>
+</section>
+{% endif %}
+
+{% if site_settings.showPublicNews != '0' %}
+<section class="h10-section">
+  <div class="h10-head"><div><h2>آخر الأخبار</h2><p>أحدث المستجدات والفعاليات من فريق الحكمة.</p></div><a href="{{ url_for('public_news') }}">كل الأخبار ←</a></div>
+  <div class="h10-news">
+  {% for n in latest_news[:3] %}
+    <a class="h10-card h10-news-card" href="{{ url_for('public_news_detail',slug=n['slug']) }}">
+      <div class="cover">{% if n['cover_image'] %}<img src="{{ n['cover_image'] }}" alt="">{% else %}HI{% endif %}</div>
+      <div class="body"><small>{{ n['category'] or 'أخبار' }} · {{ n['published_at'] or '' }}</small><h3>{{ n['title'] }}</h3><p>{{ n['excerpt'] or '' }}</p></div>
+    </a>
+  {% else %}<div class="h10-card" style="padding:30px">لا توجد أخبار منشورة حاليًا.</div>{% endfor %}
+  </div>
+</section>
+{% endif %}
+
+<section class="h10-section">
+  <div class="h10-head"><div><h2>الأثر بالأرقام</h2><p>صورة مختصرة عن نشاط الفريق وأدائه.</p></div><a href="{{ url_for('impact_public') }}">تفاصيل الأثر ←</a></div>
+  <div class="h10-card h10-impact">
+    <div class="h10-wheel" aria-label="متوسط الأداء"><div class="h10-wheel-value"><strong>{{ avg_score or 0 }}%</strong><span>متوسط الأداء</span></div></div>
+    <div class="h10-stats">
+      <div class="h10-stat"><span>الأداء</span><div class="h10-stat-bar"><span style="width:{{ avg_score or 0 }}%"></span></div><b>{{ avg_score or 0 }}%</b></div>
+      <div class="h10-stat"><span>الحضور</span><div class="h10-stat-bar"><span style="width:{{ avg_att or 0 }}%"></span></div><b>{{ avg_att or 0 }}%</b></div>
+      <div class="h10-stat"><span>المبادرات</span><div class="h10-stat-bar"><span style="width:{{ 100 if initiatives_count else 0 }}%"></span></div><b>{{ initiatives_count }}</b></div>
+      <div class="h10-stat"><span>ساعات الأثر</span><div class="h10-stat-bar"><span style="width:{{ 100 if total_hours else 0 }}%"></span></div><b>{{ total_hours }}</b></div>
+    </div>
+  </div>
+</section>
+
+<section class="h10-section">
+  <div class="h10-head"><div><h2>مبادراتنا</h2><p>مشاريع ومبادرات تصنع أثرًا حقيقيًا.</p></div><a href="{{ url_for('initiatives_list') }}">كل المبادرات ←</a></div>
+  <div class="h10-initiative-grid">
+  {% for i in featured[:3] %}
+    <a class="h10-card h10-initiative" href="{{ url_for('initiative_view',iid=i['id']) }}">
+      <small>{{ i['date'] or '' }} · {{ i['location'] or 'الموقع يعلن لاحقًا' }}</small>
+      <h3>{{ i['name'] }}</h3>
+      <p>{{ i['description'] or 'تعرف على تفاصيل المبادرة وأثرها وموقعها.' }}</p>
+      <b>عرض المبادرة ←</b>
+    </a>
+  {% else %}<div class="h10-card" style="padding:30px">ستظهر المبادرات المنشورة هنا.</div>{% endfor %}
+  </div>
+</section>
+
+<section class="h10-section">
+  <div class="h10-head"><div><h2>خريطة الأثر</h2><p>اكتشف أين نفذنا مبادراتنا وأين ستحدث مبادراتنا القادمة.</p></div><a href="{{ url_for('impact_map_public') }}">استكشف الخريطة ←</a></div>
+  <div class="h10-card h10-map-preview">
+    <div style="text-align:center"><div style="font-size:52px">🗺️</div><h3>{{ impact_points|length }} موقعًا على خريطة الأثر</h3><p style="color:var(--h-muted)">تشمل مواقع موثقة ومبادرات مخططة وقريبة.</p><a class="h10-btn primary" style="display:inline-block;background:var(--h-navy);color:#fff" href="{{ url_for('impact_map_public') }}">فتح خريطة الأثر</a></div>
+  </div>
+</section>
+
+<section class="h10-section">
+  <div class="h10-head"><div><h2>من ذاكرة الفريق</h2><p>صور وفيديوهات من المبادرات والفعاليات.</p></div><a href="{{ url_for('media_public') }}">كل المعرض ←</a></div>
+  <div class="h10-media">
+  {% for m in featured_media[:4] %}
+    {% if m['media_type']=='video' %}<video controls preload="metadata" src="{{ url_for('static',filename=m['url']) }}"></video>
+    {% elif m['url'] %}<img src="{{ url_for('static',filename=m['url']) if m['url'].startswith('uploads/') else m['url'] }}" alt="{{m['title']}}">
+    {% endif %}
+  {% else %}<div class="h10-card" style="padding:30px">سيظهر المحتوى المرئي هنا.</div>{% endfor %}
+  </div>
+</section>
+
+{% endblock %}
