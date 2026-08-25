@@ -1,0 +1,182 @@
+<!doctype html>
+<html lang="ar" dir="rtl" data-theme="dark">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>{% block title %}{{ site_settings.seoTitle or team_name }}{% endblock %}</title>
+<meta name="description" content="{{ site_settings.seoDescription or site_settings.siteDescription }}">
+<meta name="theme-color" content="{{ site_settings.navyColor or '#071A2F' }}">
+<link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+<link rel="stylesheet" href="{{ url_for('static', filename='v5.css') }}">
+<link rel="stylesheet" href="{{ url_for('static', filename='v6.css') }}">
+<link rel="stylesheet" href="{{ url_for('static', filename='v10.css') }}">
+<link rel="stylesheet" href="{{ url_for('static', filename='v13.css') }}">
+<link rel="stylesheet" href="{{ url_for('static', filename='v14.css') }}">
+<link rel="stylesheet" href="{{ url_for('static', filename='v16.css') }}">
+<link rel="stylesheet" href="{{ url_for('static', filename='v18.css') }}">
+<link rel="stylesheet" href="{{ url_for('static', filename='v21.css') }}">
+<link rel="stylesheet" href="{{ url_for('static', filename='v24.css') }}">
+<link rel="stylesheet" href="{{ url_for('static', filename='v28.css') }}">
+<link rel="manifest" href="{{ url_for('static', filename='manifest.webmanifest') }}">
+<style>:root{--green:{{ site_settings.accentColor or '#20B486' }};--navy-dark:{{ site_settings.navyColor or '#071A2F' }};--bg:{{ site_settings.backgroundColor or '#F5F7FA' }}} body{font-family:'{{ site_settings.fontFamily or 'Tajawal' }}',Arial,sans-serif}</style>
+
+<style>
+/* AHVT public cinematic space layer */
+body.public-cinematic{background:#020813!important;color:#edf5fb;min-height:100vh;position:relative;overflow-x:hidden}
+body.public-cinematic:before{content:"";position:fixed;inset:0;z-index:-5;pointer-events:none;background:
+radial-gradient(circle at 78% 18%,rgba(38,137,213,.16) 0 7%,transparent 24%),
+radial-gradient(circle at 16% 72%,rgba(27,103,166,.13) 0 6%,transparent 22%),
+radial-gradient(circle at 50% 45%,rgba(18,73,119,.10) 0 15%,transparent 42%),
+linear-gradient(180deg,#020813 0%,#041424 48%,#020812 100%);}
+body.public-cinematic:after{content:"";position:fixed;inset:0;z-index:-4;pointer-events:none;opacity:.7;background-image:
+radial-gradient(2px 2px at 8% 14%,#fff,transparent 60%),radial-gradient(1px 1px at 15% 62%,#9edcff,transparent 60%),radial-gradient(2px 2px at 24% 24%,#fff,transparent 60%),radial-gradient(1px 1px at 31% 78%,#fff,transparent 60%),radial-gradient(2px 2px at 43% 12%,#a8e0ff,transparent 60%),radial-gradient(1px 1px at 52% 69%,#fff,transparent 60%),radial-gradient(2px 2px at 63% 22%,#fff,transparent 60%),radial-gradient(1px 1px at 71% 58%,#9edcff,transparent 60%),radial-gradient(2px 2px at 79% 11%,#fff,transparent 60%),radial-gradient(1px 1px at 89% 73%,#fff,transparent 60%),radial-gradient(2px 2px at 95% 33%,#9edcff,transparent 60%);}
+.public-cinematic .public-main{background:transparent!important;position:relative}
+.public-cinematic .public-main:before{content:"";position:fixed;width:180px;height:180px;right:-55px;top:28%;border-radius:50%;z-index:-2;background:radial-gradient(circle at 35% 30%,#75c9ff,#1b5d93 45%,#07182a 72%,transparent 74%);opacity:.18;filter:blur(.5px);pointer-events:none}
+.public-cinematic .h10-footer{background:rgba(2,10,20,.86);border-top:1px solid rgba(108,190,255,.12)}
+.public-cinematic .h10-card,.public-cinematic .card,.public-cinematic .panel,.public-cinematic .info-card,.public-cinematic .event-card,.public-cinematic .control-card,.public-cinematic .public-tile{background:linear-gradient(145deg,rgba(8,28,47,.92),rgba(3,13,24,.90))!important;color:#eef7ff!important;border-color:rgba(96,177,231,.18)!important;box-shadow:0 18px 60px rgba(0,0,0,.18)}
+.public-cinematic .muted,.public-cinematic small,.public-cinematic p{color:#9db6c9}
+.public-cinematic .page-hero,.public-cinematic .section-block,.public-cinematic .h10-section{position:relative}
+</style>
+
+<style>
+body.public-cinematic{background:#020813!important;background-image:none!important}
+body.public-cinematic .h10-card,body.public-cinematic .card,body.public-cinematic .panel,body.public-cinematic .info-card,body.public-cinematic .event-card,body.public-cinematic .control-card,body.public-cinematic .public-tile,body.public-cinematic .news-card-modern,body.public-cinematic .featured-news,body.public-cinematic .initiative-modern-card{background:linear-gradient(145deg,rgba(8,31,53,.96),rgba(3,13,24,.94))!important;color:#eef7ff!important;border-color:rgba(96,177,231,.20)!important}
+body.public-cinematic .h10-card p,body.public-cinematic .card p,body.public-cinematic .panel p{color:#9db6c9}
+</style>
+{% if site_settings.customCss %}<style>{{ site_settings.customCss|safe }}</style>{% endif %}
+<link rel="stylesheet" href="{{ asset_url('v38.css') }}">
+<link rel="stylesheet" href="{{ url_for('static', filename='v44.css') }}">
+{% if site_settings.favicon %}<link rel="icon" href="{{ asset_url(site_settings.favicon) }}">{% endif %}</head>
+<body class="{{ 'admin-body' if is_admin else 'public-cinematic' }}" style="--public-bg: {% if public_background %}url('{{ asset_url(public_background) }}'){% else %}none{% endif %};">
+{% if site_settings.announcement %}<div class="announcement">{{ site_settings.announcement }}</div>{% endif %}
+
+{% if is_admin %}
+<div class="app-shell">
+<aside class="sidebar" id="sidebar">
+  <div class="brand ahvt-real-brand">{% if site_settings.teamLogo %}<img src="{{asset_url(site_settings.teamLogo)}}" alt="شعار {{team_name}}">{% else %}<div class="mark-fallback">HI</div>{% endif %}<div><b>{{ team_name }}</b><small>مركز التحكم</small></div></div>
+  
+  <nav class="nav">
+  {% set nav_items=[
+('admin_dashboard','🏠','لوحة التحكم'),
+('admins_list','🛡️','الإداريون'),
+('members_list','👥','الأعضاء'),
+('temporary_volunteers_admin','🤝','المتطوعون الوقتيون'),
+('committees_list','🗂️','اللجان'),
+('initiatives_list','🚀','المبادرات'),
+('tasks_list','✅','المهام'),
+('attendance_list','📅','الحضور'),
+('evaluations_list','📊','التقييمات'),
+('achievements','🏅','الإنجازات'),
+('news_admin','📰','الأخبار والنشر'),
+('events_admin','🗓️','الفعاليات'),
+('media_admin','📸','المعرض'),
+('podcast_public','🎙️','البودكاست'),
+('podcast_admin','🎛️','استوديو البودكاست'),
+('academy_admin','🎓','الأكاديمية'),
+('equipment_admin','🧰','المعدات'),
+('finance_admin','💠','المالية'),
+('live_admin','🔴','البث المباشر'),
+('certificates_admin','🏆','الشهادات والتكريم'),
+('honor_admin','🏅','قائمة الشرف'),
+('cards_admin','🪪','بطاقات الفريق'),
+('temporary_volunteers_admin','🤝','التطوع الوقتي'),
+('partners_admin','🤝','الشركاء'),
+('approvals_page','✔️','الموافقات'),
+('goals_page','🎯','الأهداف'),
+('analytics_page','📈','التحليلات'),
+('reports_page','📄','التقارير'),
+('admin_users','🔐','حسابات الإداريين'),
+('audit_log','🧾','سجل العمليات'),
+('security_page','🔒','الأمن'),
+('insights_page','🧠','الرؤى الذكية'),
+('risk_page','⚠️','مركز المخاطر'),
+('decision_center','🧭','مركز القرار'),
+('settings_page','⚙️','الإعدادات')
+] %}
+  {% for endpoint,icon,label in nav_items %}<a href="{{ url_for(endpoint) }}" class="nav-item {{ 'active' if current_endpoint==endpoint else '' }}"><span>{{ icon }}</span><span>{{ label }}</span></a>{% endfor %}
+  </nav>
+  <div class="sidebar-foot"><div class="who">{{ session_user['name'] if session_user else '' }}<br><span>{{ session_user['role'] if session_user else '' }}</span></div><a class="nav-item" href="{{ url_for('about_public') }}">ℹ️ عن الفريق</a><a class="nav-item" href="{{ url_for('navigation_page') }}">🧭 ترتيب القوائم</a><a class="nav-item" href="{{ url_for('sections_page') }}">🎬 أقسام الواجهة</a><a class="nav-item" href="{{ url_for('permissions_page') }}">🔐 الصلاحيات</a><a class="nav-item" href="{{ url_for('public_home') }}">🌐 الموقع العام</a><a class="nav-item" href="{{ url_for('logout') }}">↩ تسجيل الخروج</a></div>
+</aside>
+<main class="main">
+  <div class="mobile-top"><b>{{ team_name }}</b><button class="secondary" id="menuBtn" type="button">☰</button></div>
+  <div class="admin-topbar"><form action="{{ url_for('search_public') }}" method="get" class="global-search"><input name="q" placeholder="ابحث في المنصة..."><button>⌕</button></form></div>
+{% else %}
+<header class="h10-header">
+  <div class="h10-nav">
+    <a href="{{ url_for('public_home') }}" class="h10-brand ahvt-real-brand">
+      {% if site_settings.teamLogo %}<img src="{{asset_url(site_settings.teamLogo)}}" alt="شعار {{team_name}}">{% else %}<span class="h10-brand-mark">HI</span>{% endif %}
+      <span><b>AHVT</b><small>فريق الحكمة التطوعي</small></span>
+    </a>
+    <nav class="h10-links">
+      <a href="{{ url_for('public_home') }}">الرئيسية</a>
+      <a href="{{ url_for('about_public') }}">عن الفريق</a>
+      <a href="{{ url_for('public_news') }}">الأخبار</a>
+      <a href="{{ url_for('admins_list') }}">الإداريون</a>
+      <a href="{{ url_for('members_list') }}">الأعضاء</a>
+      <a href="{{ url_for('temporary_volunteers_public') }}">المتطوعون الوقتيون</a>
+      <a href="{{ url_for('initiatives_list') }}">المبادرات</a>
+      <a href="{{ url_for('events_public') }}">الفعاليات</a>
+    </nav>
+    <div class="h10-actions">
+      {% if live_session_id and site_settings.liveEnabled != "0" %}<a class="h10-live" href="{{ url_for('live_public') }}">🔴 LIVE</a>{% endif %}
+      
+      <button class="h10-menu" onclick="openHikmaMenu()" aria-label="القائمة">☰</button>
+    </div>
+  </div>
+</header>
+
+<div class="h10-drawer" id="h10Drawer" onclick="if(event.target===this)closeHikmaMenu()">
+  <aside class="h10-drawer-panel">
+    <div class="h10-drawer-head"><strong>القائمة الرئيسية</strong><button class="h10-icon" onclick="closeHikmaMenu()">✕</button></div>
+    <div class="h10-drawer-grid">
+      <a href="{{ url_for('public_home') }}">🏠 الرئيسية</a>
+      <a href="{{ url_for('about_public') }}">ℹ️ عن الفريق</a>
+      <a href="{{ url_for('public_news') }}">📰 الأخبار</a>
+      <a href="{{ url_for('admins_list') }}">🛡️ الإداريون</a>
+      <a href="{{ url_for('members_list') }}">👥 الأعضاء</a>
+      <a href="{{ url_for('temporary_volunteers_public') }}">🤝 المتطوعون الوقتيون</a>
+      <a href="{{ url_for('initiatives_list') }}">🚀 المبادرات</a>
+      <a href="{{ url_for('impact_map_public') }}">🗺️ خريطة الأثر</a>
+      <a href="{{ url_for('committees_list') }}">🗂️ اللجان</a>
+      <a href="{{ url_for('events_public') }}">📅 الفعاليات</a>
+      <a href="{{ url_for('media_public') }}">📸 المعرض</a>
+      <a href="{{ url_for('partners_public') }}">🤝 الشركاء</a>
+      <a href="{{ url_for('podcast_public') }}">🎙️ البودكاست</a>
+      <a href="{{ url_for('academy_public') }}">🎓 الأكاديمية</a>
+      <a href="{{ url_for('calendar_public') }}">🗓 التقويم</a>
+      <a href="{{ url_for('media_center_public') }}">🎞 مركز الوسائط</a>
+      <a href="{{ url_for('equipment_public') }}">🧰 المعدات</a>
+      <a href="{{ url_for('finance_public') }}">💠 الشفافية المالية</a>
+      <a href="{{ url_for('assistant_public') }}">🧠 مساعد AHVT</a>
+      <a href="{{ url_for('honor_public') }}">🏅 قائمة الشرف</a>
+      {% if session_user %}<a href="{{ url_for('chat_page') }}">💬 تواصل</a>{% endif %}
+      <a href="{{ url_for('search_public') }}">🔎 البحث</a>
+      {% if live_session_id and site_settings.liveEnabled != "0" %}<a href="{{ url_for('live_public') }}">🔴 البث المباشر</a>{% endif %}
+      
+    </div>
+  </aside>
+</div>
+<main class="public-main">
+{% endif %}
+
+{% with messages=get_flashed_messages(with_categories=true) %}{% if messages %}{% for category,message in messages %}<div class="flash {{ 'ok' if category=='ok' else 'error' }}">{{ message }}</div>{% endfor %}{% endif %}{% endwith %}
+{% block content %}{% endblock %}
+
+{% if is_admin %}
+</main></div>
+{% else %}
+<footer class="h10-footer">
+  <div class="h10-footer-grid">
+    <div><b>AHVT</b><p>فريق الحكمة التطوعي · تطوع · تعلم · تطور</p></div>
+    <div><b>استكشف</b><a href="{{ url_for('public_news') }}">الأخبار</a><a href="{{ url_for('initiatives_list') }}">المبادرات</a><a href="{{ url_for('impact_map_public') }}">خريطة الأثر</a><a href="{{ url_for('admins_list') }}">الإداريون</a></div>
+    <div><b>تواصل</b><a href="{{ telegram_url }}" target="_blank" rel="noopener">Telegram</a><a href="{{ instagram_url }}" target="_blank" rel="noopener">Instagram</a><a href="{{ url_for('public_home') }}">الموقع الرسمي</a>{% if site_settings.adminLinkVisible != "0" %}<a class="h10-admin" href="{{ url_for('admin_login') }}">🔒 دخول الإدارة</a>{% endif %}</div>
+  </div>
+</footer>
+{% endif %}
+
+
+<script src="{{ url_for('static', filename='app.js') }}"></script>
+<script src="{{ url_for('static', filename='v6.js') }}"></script>
+<script src="{{ url_for('static', filename='v10.js') }}"></script>
+<script>if('serviceWorker' in navigator){navigator.serviceWorker.register('{{ url_for("static", filename="sw.js") }}').catch(()=>{});}</script>
+</body></html>

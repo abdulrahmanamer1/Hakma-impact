@@ -1,0 +1,53 @@
+{% extends "base.html" %}
+{% block title %}أعضاء فريق الحكمة التطوعي{% endblock %}
+{% block content %}
+<div class="page-head">
+  <div><span class="eyebrow dark">AHVT · MEMBERS</span><h1>👥 أعضاء الفريق</h1><p>اللجان أولاً، ثم أعضاء ومتطوعو كل لجنة.</p></div>
+  {% if is_admin %}<a class="primary" href="{{ url_for('member_new') }}">+ إضافة عضو</a>{% endif %}
+</div>
+<div class="searchbar"><form method="get"><input name="q" value="{{ q }}" placeholder="ابحث عن عضو أو لجنة..." onchange="this.form.submit()"></form></div>
+<style>
+.committee-list{display:grid;gap:14px}.committee-group{background:linear-gradient(145deg,rgba(8,28,47,.94),rgba(3,13,24,.92));border:1px solid rgba(96,177,231,.18);border-radius:22px;overflow:hidden;box-shadow:0 18px 60px rgba(0,0,0,.18)}
+.committee-group summary{cursor:pointer;list-style:none;padding:18px 20px;display:flex;align-items:center;justify-content:space-between;gap:12px}.committee-group summary::-webkit-details-marker{display:none}.committee-title{display:flex;align-items:center;gap:10px;font-weight:900}.committee-counts{display:flex;gap:7px;flex-wrap:wrap;justify-content:flex-end}.committee-counts span{font-size:10px;color:#9af0d4;background:rgba(105,223,189,.08);border:1px solid rgba(105,223,189,.12);padding:6px 9px;border-radius:999px}
+.group-body{padding:0 14px 16px}.group-subtitle{font-size:11px;color:#9db6c9;margin:0 4px 12px;line-height:1.8}.group-section-title{font-size:12px;font-weight:900;color:#eef7ff;margin:14px 3px 9px}.member-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px}.member-tile{position:relative;display:block;text-decoration:none;color:#eef7ff;min-width:0;border-radius:16px;overflow:hidden;background:linear-gradient(145deg,#0b3152,#071d32);border:1px solid rgba(82,170,225,.22);transition:.18s;cursor:pointer}.member-tile:hover{transform:translateY(-3px);border-color:rgba(105,223,189,.45)}.member-photo{height:145px;background:linear-gradient(135deg,#0b3152,#061524);overflow:hidden;display:grid;place-items:center;font-size:28px;font-weight:900;color:#69dfbd}.member-photo img{width:100%;height:100%;object-fit:cover}.member-copy{padding:10px 11px}.member-copy small,.member-copy p{display:block;color:#9db6c9;font-size:9px;margin:3px 0}.member-copy h3{font-size:13px;margin:0 0 4px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.member-chip{display:inline-block;margin-top:5px;font-size:8px;padding:4px 7px;border-radius:7px;background:rgba(255,255,255,.05);color:#b9cad6}.volunteer-tile .member-photo{height:105px}.volunteer-tile .member-copy h3{font-size:12px}.drag-handle{position:absolute;top:8px;left:8px;z-index:3;background:rgba(2,10,18,.7);padding:4px 6px;border-radius:7px;font-size:12px}.member-admin-actions{display:flex;gap:5px;padding:0 9px 9px}.member-admin-actions a{flex:1;text-align:center;padding:6px;border-radius:8px;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.07);font-size:9px;color:#d9e7ef;text-decoration:none}.empty-committee{padding:15px;color:#8fa4b6;background:rgba(255,255,255,.02);border-radius:12px}.reorder-note{padding:11px 14px;margin-bottom:13px;border-radius:14px;background:rgba(32,180,134,.07);color:#91a7b8;font-size:11px}
+@media(max-width:1000px){.member-grid{grid-template-columns:repeat(3,minmax(0,1fr))}}@media(max-width:700px){.member-grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}.member-photo{height:120px}.volunteer-tile .member-photo{height:90px}.committee-group summary{padding:15px}.committee-counts span{font-size:8px;padding:5px 7px}}@media(max-width:430px){.member-photo{height:105px}}
+</style>
+{% if is_admin %}<div class="reorder-note">↕️ الإدارة تستطيع سحب اللجان والأعضاء لإعادة الترتيب. الزائر لا يرى أدوات الإدارة.</div>{% endif %}
+<div class="committee-list" id="committeeList">
+{% for group in grouped %}
+<details class="committee-group" draggable="{{ 'true' if is_admin else 'false' }}" data-committee-id="{{ group.id or '' }}">
+  <summary><span class="committee-title">{% if is_admin and group.id %}<span class="drag-handle">⠿</span>{% endif %}📁 {{ group.name }}</span><span class="committee-counts"><span>👤 {{group.members|length}} أعضاء</span><span>🤝 {{group.volunteers|length}} متطوعين</span><span>عرض القائمة ↕</span></span></summary>
+  <div class="group-body">
+    <p class="group-subtitle">قائمة اللجنة مرتبة بشكل مختصر. اضغط على بطاقة الشخص لعرض بياناته.</p>
+    <div class="group-section-title">الأعضاء</div>
+    <div class="member-grid" data-zone="members">
+    {% for m in group.members %}
+      <div class="member-tile" {% if is_admin %}draggable="true"{% endif %} data-member-id="{{m['id']}}">
+        <a href="{{url_for('member_view',mid=m['id'])}}" style="text-decoration:none;color:inherit;display:block">
+          <div class="member-photo">{% if m['photo'] %}<img src="{{asset_url(m['photo'])}}" alt="{{m['name']}}">{% else %}{{m['name'][:2]}}{% endif %}</div>
+          <div class="member-copy"><h3>{{m['name']}}</h3><p>{{m['position'] or 'عضو'}}</p>{% if m['department'] or m['stage'] %}<small>{% if m['department'] %}{{m['department']}}{% endif %}{% if m['stage'] %} · {{m['stage']}}{% endif %}</small>{% endif %}<span class="member-chip">اضغط لعرض البيانات</span></div>
+        </a>
+        {% if is_admin %}<div class="member-admin-actions"><a href="{{url_for('member_edit',mid=m['id'])}}">تعديل</a><a href="{{url_for('card_print',kind='member',record_id=m['id'])}}">الهوية</a></div>{% endif %}
+      </div>
+    {% else %}<div class="empty-committee">لا يوجد أعضاء في هذه اللجنة.</div>{% endfor %}
+    </div>
+    <div class="group-section-title">المتطوعون الوقتيون</div>
+    <div class="member-grid" data-zone="volunteers">
+    {% for v in group.volunteers %}
+      <a class="member-tile volunteer-tile" href="{{url_for('temporary_volunteer_card',vid=v['id'])}}">
+        <div class="member-photo">{% if v['photo'] %}<img src="{{asset_url(v['photo'])}}" alt="{{v['name']}}">{% else %}{{v['name'][:2]}}{% endif %}</div>
+        <div class="member-copy"><h3>{{v['name']}}</h3><p>{{v['task'] or 'متطوع وقتي'}}</p><small>{{v['hours'] or 0}} ساعة{% if v['initiative_id'] %} · ضمن مبادرة{% endif %}</small><span class="member-chip">عرض البطاقة</span></div>
+      </a>
+    {% else %}<div class="empty-committee">لا يوجد متطوعون وقتيون في هذه اللجنة.</div>{% endfor %}
+    </div>
+  </div>
+</details>
+{% else %}<div class="empty">لا توجد لجان أو أعضاء.</div>{% endfor %}
+</div>
+{% if is_admin %}
+<script>
+(()=>{const list=document.getElementById('committeeList');if(!list)return;let dragged=null;async function save(entity,ids){const r=await fetch('{{url_for("admin_reorder")}}',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({entity,ids})});if(!r.ok)alert('تعذر حفظ الترتيب');}
+list.querySelectorAll('.committee-group[data-committee-id]').forEach(g=>{g.addEventListener('dragstart',e=>{if(e.target.closest('.member-tile'))return;dragged=g;g.classList.add('dragging')});g.addEventListener('dragover',e=>{if(!dragged||dragged===g)return;e.preventDefault();const r=g.getBoundingClientRect();if(e.clientY<r.top+r.height/2)list.insertBefore(dragged,g);else list.insertBefore(dragged,g.nextSibling)});g.addEventListener('dragend',async()=>{if(!dragged)return;dragged.classList.remove('dragging');await save('committees',[...list.querySelectorAll('.committee-group[data-committee-id]')].map(x=>x.dataset.committeeId));dragged=null});
+const zone=g.querySelector('[data-zone="members"]');if(zone)zone.querySelectorAll('.member-tile[data-member-id]').forEach(c=>{c.addEventListener('dragstart',e=>{e.stopPropagation();dragged=c});c.addEventListener('dragover',e=>{if(!dragged||dragged===c)return;e.preventDefault();e.stopPropagation();const r=c.getBoundingClientRect();if(e.clientX<r.left+r.width/2)zone.insertBefore(dragged,c);else zone.insertBefore(dragged,c.nextSibling)});c.addEventListener('dragend',async e=>{e.stopPropagation();if(!dragged)return;await save('members',[...zone.querySelectorAll('[data-member-id]')].map(x=>x.dataset.memberId));dragged=null})});});})();
+</script>{% endif %}
+{% endblock %}

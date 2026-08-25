@@ -1,0 +1,18 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="page-head"><div><span class="eyebrow dark">AHVT · COMMITTEES</span><h1>اللجان</h1><p>اسم اللجنة، مسؤولياتها، مسؤولها، وأعضاء ومتطوعو اللجنة.</p></div>{% if is_admin %}<a class="primary" href="{{ url_for('committee_new') }}">+ إضافة لجنة</a>{% endif %}</div>
+<style>
+.committee-public-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px}.committee-public-card{padding:18px;border-radius:20px;background:linear-gradient(145deg,rgba(8,28,47,.94),rgba(3,13,24,.92));border:1px solid rgba(96,177,231,.18);box-shadow:0 18px 60px rgba(0,0,0,.18)}.committee-public-card h2{font-size:18px;margin:0 0 6px}.committee-public-card .desc{font-size:11px;line-height:1.8;color:#9db6c9}.committee-meta{display:flex;gap:7px;flex-wrap:wrap;margin:12px 0}.committee-meta span{font-size:9px;color:#b9cad6;background:rgba(255,255,255,.045);padding:6px 8px;border-radius:8px}.committee-public-card details{margin-top:10px;border-top:1px solid rgba(255,255,255,.07);padding-top:10px}.committee-public-card summary{cursor:pointer;font-size:11px;font-weight:900;list-style:none}.committee-public-card summary::-webkit-details-marker{display:none}.committee-mini-list{display:grid;grid-template-columns:1fr 1fr;gap:7px;margin-top:9px}.mini-person{display:flex;align-items:center;gap:8px;padding:8px;border-radius:10px;background:rgba(255,255,255,.035);font-size:9px}.mini-avatar{width:30px;height:30px;border-radius:9px;overflow:hidden;background:#0b3152;display:grid;place-items:center;color:#69dfbd;font-weight:900;flex:none}.mini-avatar img{width:100%;height:100%;object-fit:cover}.committee-actions{display:flex;gap:7px;margin-top:12px}.committee-actions .small-btn{flex:1;text-align:center}.committee-drag{opacity:.5;margin-left:8px}@media(max-width:700px){.committee-public-grid{grid-template-columns:1fr}.committee-mini-list{grid-template-columns:1fr 1fr}}
+</style>
+<div class="committee-public-grid">
+{% for row in data %}{% set c=row.c %}
+<article class="committee-public-card">
+  <h2>{% if is_admin %}<span class="committee-drag">⠿</span>{% endif %}{{c['name']}}</h2>
+  <p class="desc">{{c['description'] or 'لا توجد مسؤوليات موصوفة حاليًا.'}}</p>
+  <div class="committee-meta"><span>🛡️ المسؤول: {{c['head'] or 'غير محدد'}}</span><span>👥 {{row.member_count}} أعضاء</span><span>🤝 {{row.volunteer_count}} متطوعين</span></div>
+  <details><summary>عرض أعضاء ومتطوعي اللجنة</summary><div class="committee-mini-list">{% for m in row.members %}<a class="mini-person" href="{{url_for('member_view',mid=m['id'])}}"><span class="mini-avatar">{% if m['photo'] %}<img src="{{asset_url(m['photo'])}}">{% else %}{{m['name'][:2]}}{% endif %}</span><span><b>{{m['name']}}</b><small>{{m['position'] or 'عضو'}}</small></span></a>{% endfor %}{% for v in row.volunteers %}<a class="mini-person" href="{{url_for('temporary_volunteer_card',vid=v['id'])}}"><span class="mini-avatar">{% if v['photo'] %}<img src="{{asset_url(v['photo'])}}">{% else %}{{v['name'][:2]}}{% endif %}</span><span><b>{{v['name']}}</b><small>{{v['task'] or 'متطوع وقتي'}}</small></span></a>{% endfor %}</div></details>
+  {% if is_admin %}<div class="committee-actions"><a class="small-btn" href="{{url_for('committee_edit',cid=c['id'])}}">تعديل</a><form method="post" action="{{url_for('committee_delete',cid=c['id'])}}" style="flex:1"><button class="small-btn danger" style="width:100%" type="submit">حذف</button></form></div>{% endif %}
+</article>
+{% endfor %}
+</div>
+{% endblock %}
