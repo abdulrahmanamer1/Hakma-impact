@@ -1,0 +1,97 @@
+{% extends "base.html" %}
+{% block title %}AHVT — {{ site_settings.siteDescription }}{% endblock %}
+{% block content %}
+
+<section class="h10-hero">
+  <div class="h10-space-stars"></div><div class="h10-space-orbit"></div><div class="h10-space-glow"></div>
+  {% if site_settings.heroBackground %}<div class="h10-hero-bg" style="background-image:url('{{ asset_url(site_settings.heroBackground) }}')"></div>{% endif %}
+  {% if site_settings.heroVideo %}<video autoplay muted loop playsinline src="{{ asset_url(site_settings.heroVideo) }}"></video>{% endif %}
+  <div class="h10-hero-content">
+    <div class="h10-kicker">AHVT · VOLUNTEER TEAM</div>
+    <h1>فريق الحكمة التطوعي</h1>
+    <h2>تطوع .. تعلم .. تطور</h2>
+    <p>{{ site_settings.heroText or 'نبني أثرًا حقيقيًا، ونصنع تجربة تطوعية مؤسسية تجمع العطاء بالقيادة والتطوير.' }}</p>
+    <div class="h10-actions">
+      <a class="h10-btn primary" href="{{ url_for('initiatives_list') }}">استكشف المبادرات</a>
+      {% if site_settings.joinButtonVisible != '0' %}<a class="h10-btn ghost h10-join-hero" href="{{ telegram_url }}" target="_blank" rel="noopener">{{ site_settings.joinButtonIcon or '↗' }} {{ site_settings.joinButtonText or 'انضم إلى الفريق' }}</a>{% endif %}
+    </div>
+    <div class="h10-scroll-cue"><span></span><small>اكتشف المزيد</small></div>
+  </div>
+</section>
+
+<section class="ahvt-home-search ahvt-reveal">
+  <form action="{{ url_for('search_public') }}" method="get">
+    <input name="q" placeholder="ابحث عن عضو، إداري، مبادرة، خبر، فعالية أو دورة..." aria-label="البحث في AHVT">
+    <button type="submit">⌕ بحث</button>
+  </form>
+</section>
+
+<section class="h10-section ahvt-stats-first" id="impact-stats">
+  <div class="h10-head"><div><h2>AHVT بالأرقام</h2><p>أهم مؤشرات الفريق من بيانات المنصة.</p></div></div>
+  <div class="ahvt-stats-grid">
+    <div class="ahvt-stat"><span>المستفيدون</span><strong class="ahvt-stat-number" data-count="{{ beneficiaries_count or 0 }}">{{ beneficiaries_count or 0 }}</strong></div>
+    <div class="ahvt-stat"><span>الأعضاء</span><strong class="ahvt-stat-number" data-count="{{ members_count or 0 }}">{{ members_count or 0 }}</strong></div>
+    <div class="ahvt-stat"><span>المتطوعون الوقتيون</span><strong class="ahvt-stat-number" data-count="{{ temporary_volunteers_count or 0 }}">{{ temporary_volunteers_count or 0 }}</strong></div>
+    <div class="ahvt-stat"><span>ساعات التطوع</span><strong class="ahvt-stat-number" data-count="{{ total_hours or 0 }}">{{ total_hours or 0 }}</strong></div>
+    <div class="ahvt-stat ahvt-initiative-stat"><span>المبادرات</span><strong class="ahvt-stat-number" data-count="{{ initiatives_count or 0 }}">{{ initiatives_count or 0 }}</strong></div>
+    <div class="ahvt-stat"><span>الأخبار</span><strong class="ahvt-stat-number" data-count="{{ news_count or 0 }}">{{ news_count or 0 }}</strong></div>
+    <div class="ahvt-stat"><span>الإداريون</span><strong class="ahvt-stat-number" data-count="{{ admins_count or 0 }}">{{ admins_count or 0 }}</strong></div>
+  </div>
+</section>
+
+{% if live_session and site_settings.liveEnabled != "0" %}
+<section class="h10-section">
+  <div class="h10-card h10-live-card">
+    <div><div class="h10-live-badge"><span class="h10-live-dot"></span> بث مباشر الآن</div><h2>{{ live_session['title'] or 'بث مباشر من فريق الحكمة' }}</h2><p>{{ live_session['description'] or 'تابع المبادرة مباشرة من AHVT.' }}</p></div>
+    <a class="h10-btn primary" style="background:var(--h-navy);color:#fff" href="{{ url_for('live_public') }}">مشاهدة البث</a>
+  </div>
+</section>
+{% endif %}
+
+{% if site_settings.showPublicNews != '0' %}
+<section class="h10-section">
+  <div class="h10-head"><div><h2>آخر الأخبار</h2><p>أحدث المستجدات والفعاليات من فريق الحكمة.</p></div><a href="{{ url_for('public_news') }}">كل الأخبار ←</a></div>
+  <div class="h10-news">
+  {% for n in latest_news[:3] %}
+    <a class="h10-card h10-news-card" href="{{ url_for('public_news_detail',slug=n['slug']) }}">
+      <div class="cover">{% if n['cover_image'] %}<img src="{{ asset_url(n['cover_image']) }}" alt="{{ n['title'] }}" loading="lazy">{% else %}HI{% endif %}</div>
+      <div class="body"><small>{{ n['category'] or 'أخبار' }} · {{ n['published_at'] or '' }}</small><h3>{{ n['title'] }}</h3><p>{{ n['excerpt'] or '' }}</p></div>
+    </a>
+  {% else %}<div class="h10-card" style="padding:30px">لا توجد أخبار منشورة حاليًا.</div>{% endfor %}
+  </div>
+</section>
+{% endif %}
+
+<section class="h10-section">
+  <div class="h10-head"><div><h2>مبادراتنا</h2><p>مشاريع ومبادرات تصنع أثرًا حقيقيًا.</p></div><a href="{{ url_for('initiatives_list') }}">كل المبادرات ←</a></div>
+  <div class="h10-initiative-grid">
+  {% for i in featured[:3] %}
+    <a class="h10-card h10-initiative" href="{{ url_for('initiative_view',iid=i['id']) }}">
+      <small>{{ i['date'] or '' }} · {{ i['location'] or 'الموقع يعلن لاحقًا' }}</small>
+      <h3>{{ i['name'] }}</h3>
+      <p>{{ i['description'] or 'تعرف على تفاصيل المبادرة وأثرها وموقعها.' }}</p>
+      <b>عرض المبادرة ←</b>
+    </a>
+  {% else %}<div class="h10-card" style="padding:30px">ستظهر المبادرات المنشورة هنا.</div>{% endfor %}
+  </div>
+</section>
+
+<section class="h10-section">
+  <div class="h10-head"><div><h2>خريطة الأثر</h2><p>اكتشف أين نفذنا مبادراتنا وأين ستحدث مبادراتنا القادمة.</p></div><a href="{{ url_for('impact_map_public') }}">استكشف الخريطة ←</a></div>
+  <div class="h10-card h10-map-preview">
+    <div style="text-align:center"><div style="font-size:52px">🗺️</div><h3>{{ impact_points|length }} موقعًا على خريطة الأثر</h3><p style="color:var(--h-muted)">تشمل مواقع موثقة ومبادرات مخططة وقريبة.</p><a class="h10-btn primary" style="display:inline-block;background:var(--h-navy);color:#fff" href="{{ url_for('impact_map_public') }}">فتح خريطة الأثر</a></div>
+  </div>
+</section>
+
+<section class="h10-section">
+  <div class="h10-head"><div><h2>من ذاكرة الفريق</h2><p>صور وفيديوهات من المبادرات والفعاليات.</p></div><a href="{{ url_for('media_public') }}">كل المعرض ←</a></div>
+  <div class="h10-media">
+  {% for m in featured_media[:4] %}
+    {% if m['media_type']=='video' %}<video controls preload="metadata" src="{{ asset_url(m['url']) }}"></video>
+    {% elif m['url'] %}<img src="{{ asset_url(m['url']) if m['url'].startswith('uploads/') else m['url'] }}" alt="{{m['title']}}">
+    {% endif %}
+  {% else %}<div class="h10-card" style="padding:30px">سيظهر المحتوى المرئي هنا.</div>{% endfor %}
+  </div>
+</section>
+
+{% endblock %}
