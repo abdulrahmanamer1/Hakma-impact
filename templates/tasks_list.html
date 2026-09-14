@@ -1,0 +1,29 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="page-head"><div><h1>المهام</h1><p>متابعة المهام والتنفيذ.</p></div><div class="actions"><a class="primary" href="{{ url_for('task_new') }}">+ إضافة مهمة</a></div></div>
+{% if tasks %}
+<div class="table-wrap"><table>
+  <thead><tr><th>المهمة</th><th>المسؤول</th><th>الأولوية</th><th>الحالة</th><th>الموعد</th><th>QR</th><th>إجراء</th></tr></thead>
+  <tbody>
+    {% for t in tasks %}
+    <tr>
+      <td><b>{{ t['title'] }}</b></td>
+      <td>{{ t['assignee'] or '—' }}</td>
+      <td>{{ t['priority'] or 'متوسطة' }}</td>
+      <td><span class="badge">{{ t['status'] or 'Todo' }}</span></td>
+      <td>{{ t['deadline']|fmt_date }}</td><td>{% if t['qr_path'] %}<img src="{{asset_url(t['qr_path'])}}" style="width:44px;height:44px;background:#fff;padding:3px;border-radius:7px">{% endif %}</td>
+      <td>
+        <a class="small-btn" href="{{ url_for('qr_scanner', mode='task', record_id=t['id']) }}">📷 مسح عضو</a>
+        <a class="small-btn" href="{{ url_for('task_edit', tid=t['id']) }}">تعديل</a>
+        <form method="post" action="{{ url_for('task_delete', tid=t['id']) }}" style="display:inline" onsubmit="return confirm('حذف المهمة؟');">
+          <button class="small-btn danger" type="submit">حذف</button>
+        </form>
+      </td>
+    </tr>
+    {% endfor %}
+  </tbody>
+</table></div>
+{% else %}
+<div class="empty"><div class="empty-icon">✅</div>لا توجد مهام حالياً.<div style="margin-top:12px"><div class="actions"><a class="primary" href="{{ url_for('task_new') }}">+ إضافة مهمة</a></div></div></div>
+{% endif %}
+{% endblock %}

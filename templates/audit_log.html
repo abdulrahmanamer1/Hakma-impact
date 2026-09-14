@@ -1,0 +1,16 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="page-head"><div><h1>سجل العمليات</h1><p>سجل تلقائي لكل العمليات المهمة.</p></div></div>
+{% if logs %}
+<div class="card">
+  {% for l in logs %}
+  <div class="list-row" style="padding:12px 16px">
+    <div><b style="font-size:12px">{{ l['action'] }}</b> — <span class="muted" style="font-size:12px">{{ l['target'] }}</span></div>
+    <span class="muted" style="font-size:10px">{{ l['by'] }} · {{ l['date']|fmt_date }}</span>
+  </div>
+  {% endfor %}
+</div>
+{% else %}
+<div class="empty"><div class="empty-icon">🧾</div>لا توجد عمليات مسجلة بعد.</div>
+{% endif %}
+{% endblock %}

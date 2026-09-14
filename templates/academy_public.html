@@ -1,0 +1,7 @@
+{% extends "base.html" %}{% block title %}أكاديمية AHVT{% endblock %}{% block content %}
+<section class="cinematic-page academy-hub">
+<div class="page-head"><div><span class="live-status-chip">AHVT LEARNING</span><h1>🎓 أكاديمية AHVT</h1><p>تعلم، شاهد، طبّق، واحتفظ بسجل تطورك داخل منصة واحدة.</p></div><a class="primary" href="{{url_for('academy_media')}}">🎬 مركز البث والتسجيلات</a></div>
+<div class="public-grid">{% for c in courses %}<a class="public-tile academy-card" href="{{url_for('academy_course_public',cid=c.id)}}"><div class="tile-media">{% if c.cover_image %}<img src="{{asset_url(c.cover_image)}}">{% else %}🎓{% endif %}</div><h2>{{c.title}}</h2><p>{{c.description}}</p><small>{{c.instructor or 'AHVT'}} · {{c.duration or '—'}} · {{c.lesson_count}} درس</small></a>{% else %}<div class="empty-state">لا توجد دورات منشورة بعد.</div>{% endfor %}</div>
+<div class="academy-sections"><div class="profile-panel"><h2>🎙️ تعلّم من البودكاست</h2><div class="mini-list">{% for e in episodes %}<a href="{{url_for('podcast_episode',eid=e.id)}}"><b>{{e.title}}</b><span>الموسم {{e.season}} · الحلقة {{e.episode_no}}</span></a>{% else %}<span>لا توجد حلقات منشورة.</span>{% endfor %}</div></div>
+<div class="profile-panel"><h2>🔴 تعلّم من البثوث المسجلة</h2><div class="mini-list">{% for r in recordings %}<a href="{{url_for('academy_media')}}"><b>{{r.title}}</b><span>👁 {{r.viewer_peak or 0}} · {{r.started_at or '—'}}</span></a>{% else %}<span>لا توجد تسجيلات محفوظة.</span>{% endfor %}</div></div></div>
+</section>{% endblock %}
