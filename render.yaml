@@ -1,0 +1,29 @@
+services:
+  - type: web
+    name: hikma-plus
+    runtime: python
+    plan: starter
+    buildCommand: pip install -r requirements.txt
+    startCommand: gunicorn --preload --workers 2 --threads 4 --timeout 120 --access-logfile - --error-logfile - app:app
+    healthCheckPath: /readyz
+    envVars:
+      - key: PYTHON_VERSION
+        value: 3.12.4
+      - key: HIKMA_ENV
+        value: production
+      - key: HIKMA_DATA_DIR
+        value: /data
+      - key: HIKMA_TRUST_PROXY
+        value: "1"
+      - key: HIKMA_COOKIE_SECURE
+        value: "1"
+      - key: HIKMA_SECRET_KEY
+        generateValue: true
+      - key: HIKMA_OWNER_EMAIL
+        value: alhikmaplus@gmail.com
+      - key: HIKMA_OWNER_PASSWORD
+        generateValue: true
+    disk:
+      name: hikma-plus-data
+      mountPath: /data
+      sizeGB: 1
