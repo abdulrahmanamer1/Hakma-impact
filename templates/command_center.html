@@ -1,0 +1,21 @@
+{% extends "base.html" %}
+{% block title %}مركز قيادة فريق الحكمة +{% endblock %}
+{% block content %}
+<div class="page-head"><div><span class="eyebrow dark">HIKMA PLUS · COMMAND</span><h1>مركز قيادة الفريق</h1><p>صورة تشغيلية سريعة للمهام والمبادرات والأعضاء والطلبات.</p></div><div class="actions"><a class="primary" href="{{url_for('initiatives_list')}}">المشاريع والمبادرات</a><a class="secondary" href="{{url_for('tasks_list')}}">إدارة المهام</a></div></div>
+<div class="ahvt-stats-grid-final">
+{% for label,value,sub in [('الأعضاء',stats.members,'كل الأعضاء'),('الأعضاء النشطون',stats.active_members,'عضو نشط'),('حسابات الدخول النشطة',stats.active_users,'حساب'),('طلبات الانضمام',stats.pending_applications,'بانتظار المراجعة'),('المبادرات',stats.initiatives,'مبادرة مسجلة'),('المهام المفتوحة',stats.open_tasks,'تحتاج متابعة'),('المهام المتأخرة',stats.overdue,'تحتاج إجراء سريع'),('ساعات التطوع',stats.hours,'ساعة مسجلة')] %}
+<div class="ahvt-stat-final {% if label=='المهام المتأخرة' and value %}ahvt-stat-blue{% endif %}"><span>{{label}}</span><strong>{{value}}</strong><small>{{sub}}</small></div>
+{% endfor %}
+</div>
+<div class="admin-control-grid" style="margin-top:18px">
+<section class="control-card"><h2>المهام المتأخرة</h2>{% if overdue_tasks %}<div class="table-wrap"><table><thead><tr><th>المهمة</th><th>المسؤول</th><th>الموعد</th><th></th></tr></thead><tbody>{% for t in overdue_tasks %}<tr><td>{{t['title']}}</td><td>{{t['assignee'] or 'غير محدد'}}</td><td>{{t['deadline']}}</td><td><a class="small-btn" href="{{url_for('task_edit',tid=t['id'])}}">فتح</a></td></tr>{% endfor %}</tbody></table></div>{% else %}<p class="muted">لا توجد مهام متأخرة حالياً.</p>{% endif %}<a class="small-btn" href="{{url_for('tasks_list')}}">عرض جميع المهام</a></section>
+<section class="control-card"><h2>المبادرات القادمة</h2>{% if upcoming %}{% for x in upcoming %}<div class="notice-row"><b>{{x['name']}}</b><span>{{x['date'] or 'موعد غير محدد'}}</span><small>{{x['location'] or ''}} · {{x['committee'] or ''}}</small></div>{% endfor %}{% else %}<p class="muted">لا توجد مبادرات مستقبلية مسجلة.</p>{% endif %}<a class="small-btn" href="{{url_for('initiatives_list')}}">إدارة المشاريع والمبادرات</a></section>
+<section class="control-card"><h2>طلبات الانضمام</h2><p>يوجد <strong>{{stats.pending_applications}}</strong> طلباً جديداً أو قيد المراجعة.</p><a class="small-btn" href="{{url_for('volunteer_redirect')}}">صفحة التطوع العامة</a>{% if is_admin %}<a class="small-btn" href="{{url_for('applications_admin')}}">مراجعة الطلبات</a>{% endif %}</section>
+<section class="control-card"><h2>مركز التواصل</h2><p>الإعلانات الإدارية وقنوات الفريق في مكان واحد.</p><a class="primary" href="{{url_for('communication_center')}}">فتح مركز التواصل</a><a class="small-btn" href="{{url_for('chat_page')}}">المحادثات الخاصة</a></section>
+<section class="control-card"><h2>البث المباشر</h2><p>أنشئ جلسة داخلية أو أدر رابط بث خارجي.</p><a class="primary" href="{{url_for('live_admin')}}">فتح استوديو البث</a></section>
+<section class="control-card"><h2>ملفات الأعضاء</h2><p>عرض ملفات الأعضاء وساعات التطوع والمشاركات والإنجازات.</p><a class="primary" href="{{url_for('members_list')}}">دليل الأعضاء</a></section>
+<section class="control-card"><h2>الإعدادات والثيم</h2><p>خصص ألوان المنظومة وخطوطها ثم عاين التغييرات واحفظها.</p><a class="primary" href="{{url_for('settings_page')}}">تخصيص الواجهة</a></section>
+<section class="control-card"><h2>تنبيهات مهمة</h2>{% if notifications %}{% for n in notifications %}<div class="notice-row"><b>{{n['title']}}</b><p>{{n['body']}}</p></div>{% endfor %}{% else %}<p class="muted">لا توجد تنبيهات عامة نشطة.</p>{% endif %}<a class="small-btn" href="{{url_for('communication_center')}}">إعلانات الفريق</a></section>
+</div>
+<section class="control-card" style="margin-top:18px"><h2>آخر العمليات الإدارية</h2>{% if recent %}<div class="table-wrap"><table><thead><tr><th>العملية</th><th>التفاصيل</th><th>التاريخ</th></tr></thead><tbody>{% for r in recent %}<tr><td>{{r['action']}}</td><td>{{r['details']}}</td><td>{{r['date']}}</td></tr>{% endfor %}</tbody></table></div>{% else %}<p class="muted">لا توجد عمليات مسجلة بعد.</p>{% endif %}</section>
+{% endblock %}

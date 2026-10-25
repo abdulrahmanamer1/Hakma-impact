@@ -1,0 +1,34 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="page-head"><div><h1>تسجيل المشاركين</h1><p>{{ i['name'] }} · اختر الأعضاء واضغط تسجيل دخول؛ النظام يسجل الوقت الحالي تلقائيًا.</p></div></div>
+<form method="post" class="form-card">
+  {% if members %}
+  <div class="table-wrap"><table>
+    <thead><tr><th>اختيار</th><th>العضو</th><th>وقت الدخول</th><th>وقت الخروج</th><th>الساعات</th><th>الإجراء</th></tr></thead>
+    <tbody>
+    {% for m in members %}{% set row = selected.get(m['id']) %}
+      <tr>
+        <td>{% if row %}<input type="hidden" name="participant" value="{{ m['id'] }}"><input type="checkbox" checked disabled>{% else %}<input type="checkbox" name="participant" value="{{ m['id'] }}">{% endif %}</td>
+        <td><strong>{{ m['name'] }}</strong><br><small>{{ m['committee'] or '—' }}</small></td>
+        <td>{{ row['start_time'] if row else '—' }}</td>
+        <td>{{ row['end_time'] if row else '—' }}</td>
+        <td><b>{{ row['hours'] if row else 0 }}</b> ساعة</td>
+        <td>
+          {% if row and not row['end_time'] %}
+          <button class="primary" type="submit" formaction="{{ url_for('initiative_participant_checkout', iid=i['id'], mid=m['id']) }}" formmethod="post">تسجيل خروج الآن</button>
+          {% elif row %}<span class="muted">مكتمل</span>{% else %}<span class="muted">سيُسجل عند الحفظ</span>{% endif %}
+        </td>
+      </tr>
+    {% endfor %}
+    </tbody>
+  </table></div>
+  <p class="muted" style="margin-top:14px">وقت الدخول والخروج لا يُحددان مسبقًا. عند وصول العضو سجله، وعند انتهاء مشاركته اضغط «تسجيل خروج الآن»؛ بعدها يحسب النظام المدة تلقائيًا.</p>
+  {% else %}
+    <div class="empty"><div class="empty-icon">👤</div>أضف أعضاء أولاً.</div>
+  {% endif %}
+  <div class="form-actions">
+    <button class="primary" type="submit">تسجيل دخول المحددين الآن</button>
+    <a class="secondary" href="{{ url_for('initiative_view', iid=i['id']) }}">إلغاء</a>
+  </div>
+</form>
+{% endblock %}

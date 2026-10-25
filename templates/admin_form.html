@@ -1,0 +1,19 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="page-head"><div><span class="eyebrow dark">ADMIN PROFILE</span><h1>{{ 'تعديل إداري' if a else 'إضافة إداري' }}</h1></div></div>
+<form method="post" enctype="multipart/form-data" class="form-card">
+<div class="profile-upload"><div class="profile-preview">{% if a and a['photo'] %}<img src="{{asset_url(a['photo'])}}">{% else %}🛡️{% endif %}</div><div><label>صورة الإداري</label><input type="file" name="photo_file" accept="image/*"><small>سيتم حفظ الصورة بصيغة JPG.</small></div></div>
+<div class="form-grid">
+<div class="field"><label>الاسم</label><input name="name" value="{{a['name'] if a else ''}}" required></div>
+<div class="field"><label>المنصب</label><input name="position" value="{{a['position'] if a else ''}}"></div>
+<div class="field"><label>القسم</label><input name="department" value="{{a['department'] if a else ''}}"></div>
+<div class="field full"><label>المناصب الإضافية</label><div id="extra-positions">{% for ep in extra_positions %}<div class="position-row" style="display:flex;gap:8px;margin-bottom:8px"><input name="extra_position" value="{{ep.get('position','')}}" placeholder="المنصب"><select name="extra_committee"><option value="">بدون لجنة</option>{% for c in committees %}<option value="{{c['name']}}" {{'selected' if ep.get('committee')==c['name'] else ''}}>{{c['name']}}</option>{% endfor %}</select><button type="button" class="small-btn danger" onclick="this.parentElement.remove()">حذف</button></div>{% endfor %}</div><button type="button" class="secondary" onclick="addPosition()">+ إضافة منصب</button></div>
+<div class="field"><label>اللجنة</label><select name="committee"><option value="">—</option>{% for c in committees %}<option {{'selected' if a and a['committee']==c['name'] else ''}}>{{c['name']}}</option>{% endfor %}</select></div>
+<div class="field"><label>رقم البطاقة</label><input name="membership_no" value="{{a['membership_no'] if a else ''}}"></div>
+<div class="field"><label>تاريخ التكليف</label><input type="date" name="date" value="{{a['date'] if a else ''}}"></div>
+<div class="field"><label>إصدار البطاقة</label><input type="date" name="card_issue_date" value="{{a['card_issue_date'] if a else ''}}"></div>
+<div class="field"><label>انتهاء البطاقة</label><input type="date" name="card_expiry" value="{{a['card_expiry'] if a else ''}}"></div>
+<div class="field"><label>NFC UID</label><input name="nfc_uid" value="{{a['nfc_uid'] if a else ''}}"></div>
+<div class="field full"><label class="checkline"><input type="checkbox" name="card_public" {% if a and a['card_public'] %}checked{% endif %}> السماح بظهور البطاقة إلكترونيًا للعامة</label></div><div class="field full"><label class="checkline"><input type="checkbox" name="qr_enabled" {% if not a or a['qr_enabled'] %}checked{% endif %}> تشغيل QR للبطاقة</label></div><div class="field full"><label>المسؤوليات</label><textarea name="responsibilities">{{a['responsibilities'] if a else ''}}</textarea></div>
+</div><div class="form-actions"><button class="primary">حفظ</button>{% if a %}<a class="secondary" href="{{url_for('card_print',kind='admin',record_id=a['id'])}}">🪪 البطاقة الإدارية</a>{% endif %}<a class="secondary" href="{{url_for('admins_list')}}">إلغاء</a></div></form>
+<script>function addPosition(){const w=document.getElementById('extra-positions');const d=document.createElement('div');d.className='position-row';d.style='display:flex;gap:8px;margin-bottom:8px';d.innerHTML='<input name="extra_position" placeholder="المنصب"><select name="extra_committee"><option value="">بدون لجنة</option>{% for c in committees %}<option value="{{c['name']}}">{{c['name']}}</option>{% endfor %}</select><button type="button" class="small-btn danger" onclick="this.parentElement.remove()">حذف</button>';w.appendChild(d)}</script>{% endblock %}

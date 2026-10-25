@@ -1,0 +1,31 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="page-head"><div><h1>إجراء تقييم</h1></div></div>
+<form method="post" class="form-card">
+  <div class="field"><label>العضو</label>
+    <select name="member_id">
+      {% for m in members %}<option value="{{ m['id'] }}" {{ 'selected' if preselect==m['id'] else '' }}>{{ m['name'] }}</option>{% endfor %}
+    </select>
+  </div>
+  <div class="field"><label>نوع التقييم</label>
+    <select name="type">
+      <option>تقييم مبادرة</option><option>تقييم يومي</option><option>تقييم شهري</option>
+    </select>
+  </div>
+  <div class="field"><label>التاريخ</label><input type="date" name="date" value="{{ today }}"></div>
+  <div style="border-top:1px solid #F1F5F9;padding-top:10px">
+    {% for k in criteria_keys %}
+    <div style="margin-bottom:10px">
+      <label style="font-size:11px;color:var(--gray);display:flex;justify-content:space-between"><span>{{ criteria_labels[k] }}</span><span id="val_{{ k }}">50</span></label>
+      <input type="range" min="0" max="100" value="50" name="c_{{ k }}" id="c_{{ k }}"
+             oninput="document.getElementById('val_{{ k }}').innerText=this.value" style="width:100%">
+    </div>
+    {% endfor %}
+  </div>
+  <div class="field"><label>ملاحظات</label><textarea name="notes"></textarea></div>
+  <div class="form-actions">
+    <button class="primary" type="submit">حفظ التقييم</button>
+    <a class="secondary" href="{{ url_for('evaluations_list') }}">إلغاء</a>
+  </div>
+</form>
+{% endblock %}
