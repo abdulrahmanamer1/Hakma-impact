@@ -1,0 +1,14 @@
+
+/* Hikma Plus feature enhancements */
+.live-participant-list{display:flex;gap:8px;flex-wrap:wrap}
+.live-participant-item{display:flex;flex-direction:column;gap:3px;min-width:130px;padding:10px 12px;border:1px solid var(--border,#dbe3ec);border-radius:10px;background:var(--surface,rgba(127,127,127,.06))}
+.live-participant-item small{opacity:.72}
+.announcement-list .notice-row h3{margin:10px 0 6px}
+.announcement-list .notice-row p{line-height:1.8}
+.command-shortcut-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:14px}
+@media(max-width:720px){
+  .live-participant-item{min-width:calc(50% - 8px)}
+  .table-wrap{max-width:100%;overflow-x:auto}
+  .page-head{gap:12px;align-items:flex-start;flex-wrap:wrap}
+  .page-head .actions{display:flex;flex-wrap:wrap;gap:8px}
+}
